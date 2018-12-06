@@ -4,7 +4,7 @@
       <header-view></header-view>
     </Header>
     <Layout>
-      <Sider v-show="$route.path!=='/'" :style="{background:'#ffffff'}" collapsible :collapsed-width="78" v-model="isCollapsed" :class="siderClasses">
+      <Sider v-show="$route.path!=='/'" :style="{background:'#ffffff'}" :class="siderClasses">
         <nav-view v-if="$route.path!=='/'" :class="menuitemClasses"></nav-view>
       </Sider>
       <Content class="content-pad">
@@ -35,6 +35,17 @@ export default {
       return [
         !this.isCollapsed ? 'collapsed-width' : ''
       ]
+    }
+  },
+  mounted () {
+    //window.addEventListener('beforeunload',evt => this.beforeunloadFun(evt))
+  },
+  destroyed () {
+     //window.removeEventListener('beforeunload')
+  },
+  methods:{
+    beforeunloadFun:function () {
+      sessionStorage.removeItem('userName');
     }
   }
 }

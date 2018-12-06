@@ -15,32 +15,54 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" @click="cancelRight(batchUser)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramStart" style="width: 200px;"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramEnd" style="width: 200px;"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
-        <span><Input style="width: 200px;"/></span>
-        <span class="ml10"><Button icon="ios-search">查询</Button></span>
+        <span><Input v-model="listParams.name" style="width: 200px;"/></span>
+        <span class="ml10"><Button icon="ios-search" @click="getDataEnList">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
-      <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-      <Page :total="total" v-if="total>10" show-elevator show-total class="mt30"/>
+      <Table border :columns="columns" :data="listData" :loading="loading" highlight-row @on-selection-change="selectUser"></Table>
+      <Page :total="total" v-if="total>10" show-elevator show-total @on-change="pageChangeDataEn" class="mt30"/>
     </div>
+    <Modal
+      title="提示"
+      v-model="cancelTip"
+    >
+      <p ref="cancelTip"></p>
+      <div slot="footer">
+        <Button type="info"  @click="del">确定</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script>
+  import axios from "@/axios/axios";
+  import * as base from '../../axios/base'
   export default {
     name: "dataSignList",
     data () {
       return {
-        total:100,
+        total:'',
         loading:false,
+        cancelTip:false,
+        batchUser:'',//保存批量取消用户
+        //条件查询参数
+        listParams:{
+          activityId:'',
+          name:'',
+          createTimeStart:'',
+          createTimeEnd:'',
+          pageNum:1,
+          pageSize:10
+        },
         columns:[
           {
             type: 'selection',
@@ -49,7 +71,7 @@
           },
           {
             title:'用户编号',
-            key:'number',
+            key:'userId',
             align:'center'
           },
           {
@@ -63,8 +85,8 @@
             align:'center'
           },
           {
-            title:'报名费',
-            key:'fee',
+            title:'报名费（元）',
+            key:'amount',
             align:'center'
           },
           {
@@ -74,12 +96,12 @@
           },
           {
             title:'报名渠道',
-            key:'method',
+            key:'typeText',
             align:'center'
           },
           {
             title:'报名日期',
-            key:'date',
+            key:'createDate',
             align:'center'
           },
           {
@@ -88,59 +110,116 @@
             align:'center',
             width:200,
             render:(h,params) => {
-              return h('div', [
-                h('Button', {
-                  props: {
-                    type: 'error',
-                    size: 'small'
-                  },
-                  style: {
-                    marginRight: '5px'
-                  },
-                  on: {
-                    click: () => {
-                      console.log(params.index);
+              if (params.row.status == '1') {
+                return h('div', [
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small',
+                      disabled:true
+                    },
+                    style: {
+                      marginRight: '5px'
                     }
-                  }
-                }, '取消资格')
-              ])
+                  }, '已取消资格')
+                ])
+              } else {
+                return h('div', [
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        this.cancelRight(params.row.userId);
+                      }
+                    }
+                  }, '取消资格')
+                ])
+              }
             }
           }
         ],
-        listData:[
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          },
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          },
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          }
-        ]
+        listData:[]
       }
     },
+    mounted () {
+      this.listParams.activityId = this.$route.query.activityId;
+      this.getDataEnList();
+    },
     methods :{
+      getDataEnList:function () {
+        this.loading = true;
+        axios.BlindDateSignList(this.listParams)
+          .then(res => {
+            //console.log(JSON.stringify(res.result.list));
+            if (res.code === 200) {
+              this.loading = false;
+              this.listData = res.result.list;
+              this.total = res.result.total;
+            } else {
+              this.cancelTip = true;
+              this.$refs.cancelTip.innerHTML = res.message;
+            }
+          })
+          .catch(error => {
+            console.log(error);
+            this.cancelTip = true;
+            this.$refs.cancelTip.innerHTML = '查询出错';
+          })
+      },
       exportData :function () {
-
+        window.location.href = base.baseUrl + 'activity_user/exportActivityUserList?activityId='+this.listParams.activityId+'&name='+this.listParams.name+'&createTimeStart='+this.listParams.createTimeStart+'&createTimeEnd='+this.listParams.createTimeEnd;
+      },
+      selectUser:function (selection) {
+        let  userArr = [];
+        selection.forEach(item => {
+          userArr.push(item.userId);
+        });
+        this.batchUser = userArr.join(',');
+        //console.log(this.batchUser);
+      },
+      cancelRight:function (id) {
+        if (id === '') {
+          this.cancelTip = true;
+          this.$refs.cancelTip.innerHTML = '请至少勾选一名用户！';
+        } else {
+          axios.BlindDateCancelEn({userIds:id})
+            .then(res => {
+              //console.log(res);
+              if (res.data === '0') {
+                this.batchUser = '';
+                this.cancelTip = true;
+                this.$refs.cancelTip.innerHTML = '取消成功！';
+                this.getDataEnList();
+              } else {
+                this.cancelTip = true;
+                this.$refs.cancelTip.innerHTML = '取消失败！';
+              }
+            })
+            .catch(error => {
+              console.log(error);
+              this.cancelTip = true;
+              this.$refs.cancelTip.innerHTML = '取消出错！';
+            })
+        }
+      },
+      del:function () {
+        this.cancelTip = false;
+      },
+      pageChangeDataEn:function (page) {
+        this.listParams.pageNum = page;
+        this.getDataEnList();
+      },
+      paramStart:function (date) {
+        this.listParams.createTimeStart = date;
+      },
+      paramEnd:function (date) {
+        this.listParams.createTimeEnd = date;
       }
     }
   }

@@ -5,8 +5,8 @@
       <div class="login-form mt20">
         <div class="login-center">统一登录中心</div>
         <div class="login-line"></div>
-        <Input prefix="ios-contact" placeholder="请输入账号" style="width: 300px;" class="mt30"/>
-        <Input prefix="ios-unlock" placeholder="请输入密码" style="width: 300px;"  class="mt30"/>
+        <Input prefix="ios-contact" type="text" v-model="loginName" placeholder="请输入账号" style="width: 300px;" @on-enter="toLoading" class="mt30"/>
+        <Input prefix="ios-unlock" type="password" v-model="password" placeholder="请输入密码" style="width: 300px;" @on-enter="toLoading" class="mt30"/>
         <div class="mt30">
           <Button type="primary" :loading="loading" @click="toLoading" style="width: 300px">
             <span v-if="!loading">登录</span>
@@ -15,6 +15,15 @@
         </div>
       </div>
     </div>
+   <Modal
+     title="登录失败"
+     v-model="loginFail"
+   >
+     <p ref="failTip"></p>
+     <div slot="footer">
+       <Button type="info"  @click="del">确定</Button>
+     </div>
+   </Modal>
    <back-view :width="baWidth" :height="baHeight"></back-view>
   </div>
 </template>
@@ -26,21 +35,40 @@
     data () {
       return {
         loading : false,
+        loginFail:false,
         baWidth:window.innerWidth,
-        baHeight:window.innerHeight
+        baHeight:window.innerHeight,
+        loginName:'',
+        password:''
       }
     },
     methods : {
       toLoading: function () {
         this.loading = true;
-        axios.Login('11')
+        axios.Login({loginName:this.loginName,password:this.password})
           .then(res => {
-          this.$store.dispatch('setUserInfo',res);
+            //console.log(res);
+            //console.log(res.code);
+            if (res.code === "0") {
+              this.$store.dispatch('setUserInfo',res.data.userName);
+              sessionStorage.setItem('menus',JSON.stringify(res.data.menus));
+              this.$router.push({path:'/welcome'})
+            }
+            if (res.code === "1") {
+              this.loading = false;
+              this.loginFail = true;
+              this.$refs.failTip.innerHTML = res.message;
+            }
         })
           .catch(error => {
-            console.log(error)
+            console.log(error);
+            this.loading = false;
+            this.loginFail = true;
+            this.$refs.failTip.innerHTML = '登录出错！';
           });
-        this.$router.push({path:'/welcome'})
+      },
+      del:function () {
+        this.loginFail = false;
       }
     },
     mounted () {

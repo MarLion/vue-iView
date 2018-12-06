@@ -9,8 +9,8 @@
       </div>
       <div class="head-message ml30">
         <p>
-          <span>管理员</span>
-          <span>集团总公司</span>
+          <span>{{userName}}</span>
+          <!--<span>集团总公司</span>-->
         </p>
         <p>
           消息（0）
@@ -30,7 +30,19 @@
     name: "headView",
     data () {
       return {
-        out: '退出登录'
+        out: '退出登录',
+        name:''
+      }
+    },
+    mounted () {
+      this.name = sessionStorage.getItem('userName');
+      if (sessionStorage.getItem('userName') != null) {
+        this.$store.state.admin_token = sessionStorage.getItem('userName');
+      }
+    },
+    computed:{
+      userName:function () {
+        return this.$store.state.admin_token;
       }
     }
   }

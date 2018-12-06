@@ -15,32 +15,54 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" @click="batchCancelSign(actBatchUser)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignBeg" style="width: 200px;"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignEnd" style="width: 200px;"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
-        <span><Input style="width: 200px;"/></span>
-        <span class="ml10"><Button icon="ios-search">查询</Button></span>
+        <span><Input v-model="actSignParams.name" style="width: 200px;"/></span>
+        <span class="ml10"><Button icon="ios-search" @click="getActSignList">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
-      <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-      <Page :total="total" v-if="total>10" show-elevator show-total class="mt30"/>
+      <Table border :columns="columns" :data="listData" :loading="loading" highlight-row @on-selection-change="actSelectUser"></Table>
+      <Page :total="total" v-if="total>10" show-elevator show-total @on-change="actSignPageChange" class="mt30"/>
     </div>
+    <Modal
+      title="提示"
+      v-model="actSignTip"
+    >
+      <p ref="actSignTip"></p>
+      <div slot="footer">
+        <Button type="info"  @click="del">确定</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script>
+  import axios from "@/axios/axios";
+  import * as base from '../../axios/base';
   export default {
     name: "actSignList",
     data () {
       return {
-        total:100,
+        total:'',
         loading:false,
+        actSignTip:false,
+        actBatchUser:'',
+        //查询参数
+        actSignParams:{
+          programId:'',
+          name:'',
+          createTimeStart:'',
+          createTimeEnd:'',
+          pageNum:1,
+          pageSize:10
+        },
         columns:[
           {
             type: 'selection',
@@ -49,7 +71,7 @@
           },
           {
             title:'用户编号',
-            key:'number',
+            key:'userId',
             align:'center'
           },
           {
@@ -63,8 +85,8 @@
             align:'center'
           },
           {
-            title:'报名费',
-            key:'fee',
+            title:'报名费（元）',
+            key:'amount',
             align:'center'
           },
           {
@@ -74,12 +96,12 @@
           },
           {
             title:'报名渠道',
-            key:'method',
+            key:'typeText',
             align:'center'
           },
           {
             title:'报名日期',
-            key:'date',
+            key:'createDate',
             align:'center'
           },
           {
@@ -88,59 +110,114 @@
             align:'center',
             width:200,
             render:(h,params) => {
-              return h('div', [
-                h('Button', {
-                  props: {
-                    type: 'error',
-                    size: 'small'
-                  },
-                  style: {
-                    marginRight: '5px'
-                  },
-                  on: {
-                    click: () => {
-                      console.log(params.index);
+              if (params.row.status == '1') {
+                return h('div', [
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small',
+                      disabled:true
+                    },
+                    style: {
+                      marginRight: '5px'
                     }
-                  }
-                }, '取消资格')
-              ])
+                  }, '已取消资格')
+                ])
+              } else {
+                return h('div', [
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        this.batchCancelSign(params.row.userId);
+                      }
+                    }
+                  }, '取消资格')
+                ])
+              }
             }
           }
         ],
-        listData:[
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          },
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          },
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          }
-        ]
+        listData:[]
       }
     },
+    mounted () {
+      this.actSignParams.programId = this.$route.query.actId;
+      this.getActSignList();
+    },
     methods :{
-      exportData :function () {
-
+      getActSignList:function () { //查询列表
+        this.loading = true;
+        axios.ActSignList(this.actSignParams)
+          .then(res => {
+            //console.log(JSON.stringify(res.result.list[0]));
+            if (res.code === 200) {
+              this.loading = false;
+              this.listData = res.result.list;
+              this.total = res.result.total;
+            } else {
+              this.actSignTip = true;
+              this.$refs.actSignTip.innerHTML = res.message;
+            }
+          })
+          .catch(error => {
+            console.log(error);
+            this.actSignTip = true;
+            this.$refs.actSignTip.innerHTML = '查询出错！';
+          })
+      },
+      exportData :function () { //导出表格
+        window.location.href = base.baseUrl + 'column_user/exportProgramUserList?programId='+this.actSignParams.programId+'&name='+this.actSignParams.name+'&createTimeStart='+this.actSignParams.createTimeStart+'&createTimeEnd='+this.actSignParams.createTimeEnd;
+      },
+      actSignBeg:function (date) { //查询开始时间
+        this.actSignParams.createTimeStart = date;
+      },
+      actSignEnd:function (date) { //查询结束时间
+        this.actSignParams.createTimeEnd = date;
+      },
+      actSelectUser:function (selection) {
+        let arr = [];
+        selection.forEach(item => {
+          arr.push(item.userId);
+        });
+        this.actBatchUser = arr.join(',');
+      },
+      batchCancelSign:function (id) { //取消资格
+        if (id === '') {
+          this.actSignTip = true;
+          this.$refs.actSignTip.innerHTML = '请至少勾选一名用户！';
+        } else {
+          axios.ActSignCancel({userIds:id})
+            .then(res => {
+              if (res.data === '0') {
+                this.actBatchUser = '';
+                this.actSignTip = true;
+                this.$refs.actSignTip.innerHTML = '取消成功！';
+                this.getActSignList();
+              } else {
+                this.actSignTip = true;
+                this.$refs.actSignTip.innerHTML = '取消失败！';
+              }
+            })
+            .catch(error => {
+              console.log(error);
+              this.actSignTip = true;
+              this.$refs.actSignTip.innerHTML = '取消出错！';
+            })
+        }
+      },
+      actSignPageChange:function (page) { //翻页
+        this.actSignParams.pageNum = page;
+        this.getActSignList();
+      },
+      del:function () {
+        this.actSignTip = false;
       }
     }
   }

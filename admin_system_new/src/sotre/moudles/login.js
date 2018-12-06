@@ -12,7 +12,7 @@ const mutations = {
 
 const actions = {
   setUserInfo ({commit},res) {
-    sessionStorage.setItem('userInfo',JSON.stringify(res));
+    sessionStorage.setItem('userName',res);
     commit(types.ADMIN_TOKEN,res)
   }
 };

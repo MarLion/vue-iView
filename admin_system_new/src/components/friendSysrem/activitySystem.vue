@@ -87,8 +87,11 @@
             <FormItem label="活动口号">
               <Input type="text" v-model="formData.slogan"></Input>
             </FormItem>
-            <FormItem label="活动时间">
-              <Input type="text" v-model="formData.label"></Input>
+            <FormItem label="开始时间">
+              <Input type="text" v-model="formData.beginTime"></Input>
+            </FormItem>
+            <FormItem label="结束时间">
+              <Input type="text" v-model="formData.endTime"></Input>
             </FormItem>
             <FormItem label="活动地址">
               <Input type="text" v-model="formData.location"></Input>
@@ -378,7 +381,8 @@
         formData:{
           name:'',
           slogan:'',
-          label:'',
+          beginTime:'',
+          endTime:'',
           location:'',
           member:'',
           ins:'',

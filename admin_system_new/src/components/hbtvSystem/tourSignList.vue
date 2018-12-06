@@ -15,33 +15,50 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" @click="cancelBatch" :loading="canceling">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="enStartTime" style="width: 200px;"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="enEndTime" style="width: 200px;"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
-        <span><Input style="width: 200px;"/></span>
-        <span class="ml10"><Button icon="ios-search">查询</Button></span>
+        <span><Input v-model="userName" style="width: 200px;"/></span>
+        <span class="ml10"><Button icon="ios-search" @click="getEnlist">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
-      <Table border :columns="columns" :data="listData" :loading="loading" highlight-row></Table>
-      <Page :total="total" v-if="total>10" show-elevator show-total class="mt30"/>
+      <Table border :columns="columns" :data="listData" :loading="loading" highlight-row @on-selection-change="changeSelect"></Table>
+      <Page :total="total" v-if="total>10" show-elevator show-total class="mt30" @on-change="pageChangeEn"/>
     </div>
-
+    <Modal
+      title="提示"
+      v-model="cancelTip"
+    >
+      <p ref="cancelTip"></p>
+      <div slot="footer">
+        <Button type="info"  @click="del">确定</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script>
+  import axios from "@/axios/axios";
+  import * as base from '../../axios/base'
   export default {
     name: "tourSignList",
     data () {
       return {
-        total:100,
+        queryId:'',
+        total:'',
+        startTime:'',
+        endTime:'',
+        userName:'',
+        page:1,
+        pageSize:10,
         loading:false,
+        cancelTip:false,
         columns:[
           {
             type: 'selection',
@@ -50,12 +67,12 @@
           },
           {
             title:'用户编号',
-            key:'number',
+            key:'userId',
             align:'center'
           },
           {
             title:'姓名',
-            key:'name',
+            key:'userName',
             align:'center'
           },
           {
@@ -64,8 +81,8 @@
             align:'center'
           },
           {
-            title:'报名费',
-            key:'fee',
+            title:'报名费（元）',
+            key:'amount',
             align:'center'
           },
           {
@@ -75,12 +92,12 @@
           },
           {
             title:'报名渠道',
-            key:'method',
+            key:'typeText',
             align:'center'
           },
           {
             title:'报名日期',
-            key:'date',
+            key:'createTime',
             align:'center'
           },
           {
@@ -89,59 +106,138 @@
             align:'center',
             width:200,
             render:(h,params) => {
-              return h('div', [
-                h('Button', {
-                  props: {
-                    type: 'error',
-                    size: 'small'
-                  },
-                  style: {
-                    marginRight: '5px'
-                  },
-                  on: {
-                    click: () => {
-                      console.log(params.row.number);
+              //状态为0 正常 状态为1 已取消资格
+              if (params.row.status == '1') {
+                return h('div', [
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small',
+                      disabled:true
+                    },
+                    style: {
+                      marginRight: '5px'
                     }
-                  }
-                }, '取消资格')
-              ])
+                  }, '已取消资格')
+                ])
+              } else {
+                return h('div', [
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small',
+                      disabled:false
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        axios.CancleTourEn({tourUserId:params.row.id})
+                          .then(res => {
+                            console.log(res);
+                            if (res.data === "0") {
+                              this.cancelTip = true;
+                              this.$refs.cancelTip.innerHTML = '取消成功！';
+                              this.getEnlist();
+                            }
+                          })
+                          .catch(error => {
+                            console.log(error)
+                          })
+                      }
+                    }
+                  }, '取消资格')
+                ])
+              }
             }
           }
         ],
-        listData:[
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          },
-          {
-            number:'985475621',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          },
-          {
-            number:'123456789',
-            name:'王浩',
-            phone:'14589555487',
-            fee:'500',
-            address:'洪山区中南路555号',
-            method:'玄乐App',
-            date:'2018-11-25'
-          }
-        ]
+        listData:[],
+        batchStr:'',
+        canceling:false
       }
     },
+    mounted () {
+      this.queryId =  this.$route.query.tourId;
+      this.getEnlist();
+    },
     methods :{
+      getEnlist:function () {
+        this.loading = true;
+        axios.TourEnlist({
+          tourId:this.queryId,
+          startTime:this.startTime,
+          endTime:this.endTime,
+          userName:this.userName,
+          pageNum:this.page,
+          pageSize: this.pageSize
+        })
+          .then(res => {
+            //console.log(JSON.stringify(res));
+            this.loading = false;
+            this.listData = res.rows;
+            this.total = res.total;
+          })
+          .catch(error => {
+            console.log(error);
+            this.cancelTip = true;
+            this.$refs.cancelTip.innerHTML = '查询出错！';
+          })
+      },
       exportData :function () {
-
+        window.location.href = base.baseUrl + 'tour_user/exportTourUserList?tourId='+this.queryId+'&startTime='+this.startTime+'&endTime='+this.endTime+'&userName='+this.userName;
+      },
+      enStartTime:function (date) {
+        this.startTime = date;
+      },
+      enEndTime:function (date) {
+        this.endTime = date;
+      },
+      pageChangeEn:function (page) {
+        this.page = page;
+        this.getEnlist();
+      },
+      changeSelect:function (selection) {
+        //console.log(selection);
+        let idArr = [];
+        selection.forEach(item => {
+          idArr.push(item.id);
+        });
+        //console.log(idArr);
+        this.batchStr = idArr.join(',');
+        //console.log(this.batchStr);
+      },
+      cancelBatch:function () {
+        if (this.batchStr == "") {
+          this.cancelTip = true;
+          this.$refs.cancelTip.innerHTML = '请至少勾选一名人员！';
+        } else {
+          this.canceling = true;
+          axios.CancleTourEnBatch({tourUserIds:this.batchStr})
+            .then(res => {
+              //console.log(res);
+              this.canceling = false;
+              if (res.data === '0') {
+                this.batchStr = '';
+                this.cancelTip = true;
+                this.$refs.cancelTip.innerHTML = '取消成功！';
+                this.getEnlist();
+              } else {
+                this.cancelTip = true;
+                this.$refs.cancelTip.innerHTML = '取消失败！';
+              }
+            })
+            .catch(error => {
+              console.log(error);
+              this.cancelTip = true;
+              this.$refs.cancelTip.innerHTML = '后台出错！';
+              this.canceling = false;
+            })
+        }
+      },
+      del:function () {
+        this.cancelTip = false;
       }
     }
   }

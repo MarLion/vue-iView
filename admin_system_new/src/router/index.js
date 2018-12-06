@@ -12,53 +12,100 @@ route.push({
   {
     path:'/welcome',
     name:'welcome',
-    component: resolve => require(['../components/welcome.vue'], resolve)
+    component: resolve => require(['../components/welcome.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/userMessage',
     name:'userMessage',
-    component: resolve => require(['../components/userPages/userMessage.vue'], resolve)
+    component: resolve => require(['../components/userPages/userMessage.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/communitySystem',
     name:'communitySystem',
-    component: resolve => require(['../components/friendSysrem/communitySystem.vue'], resolve)
+    component: resolve => require(['../components/friendSysrem/communitySystem.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/activitySystem',
     name:'activitySystem',
-    component: resolve => require(['../components/friendSysrem/activitySystem.vue'], resolve)
+    component: resolve => require(['../components/friendSysrem/activitySystem.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/tourRouteSystem',
     name:'tourRouteSystem',
-    component: resolve => require(['../components/hbtvSystem/tourRouteSystem.vue'], resolve)
+    component: resolve => require(['../components/hbtvSystem/tourRouteSystem.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/tourSignList',
     name:'tourSignList',
-    component: resolve => require(['../components/hbtvSystem/tourSignList.vue'], resolve)
+    component: resolve => require(['../components/hbtvSystem/tourSignList.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/dataPageSystem',
     name:'dataPageSystem',
-    component: resolve => require(['../components/hbtvSystem/dataPageSystem.vue'], resolve)
+    component: resolve => require(['../components/hbtvSystem/dataPageSystem.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/dataSignList',
     name:'dataSignList',
-    component: resolve => require(['../components/hbtvSystem/dataSignList.vue'], resolve)
+    component: resolve => require(['../components/hbtvSystem/dataSignList.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/act',
     name:'act',
-    component: resolve => require(['../components/hbtvSystem/act.vue'], resolve)
+    component: resolve => require(['../components/hbtvSystem/act.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
   },
   {
     path:'/actSignList',
     name:'actSignList',
-    component: resolve => require(['../components/hbtvSystem/actSignList.vue'], resolve)
-  });
+    component: resolve => require(['../components/hbtvSystem/actSignList.vue'], resolve),
+    meta:{
+      requireAuth:true
+    },
+  },
+  {
+    path:'/actTicketSystem',
+    name:'actTicketSystem',
+    component: resolve => require(['../components/hbtvSystem/actTicketSystem.vue'], resolve),
+    meta:{
+      requireAuth:true
+    },
+  },
+  {
+    path:'/actTicketSignList',
+    name:'actTicketSignList',
+    component: resolve => require(['../components/hbtvSystem/actTicketSignList.vue'], resolve),
+    meta:{
+      requireAuth:true
+    },
+  }
+  );
 export default new Router({
   routes: route
 })

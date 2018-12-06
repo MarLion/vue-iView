@@ -37,20 +37,13 @@
         this.$store.commit('REMOVE_TAB_LIST',name);
         //删除之后定位到上一个页面 全部关闭时先定位到欢迎界面
         if (this.$store.state.tabList.length > 0){
-          this.$router.push({path :'/'+this.$store.state.activeTab})
+          this.$router.push({path :this.$store.state.activeTab})
         } else {
           this.$router.push({path :'/welcome'})
         }
-        //关闭页签时 关闭当前新增窗口 再次打开显示列表
-        if (this.$route.path !== '/communitySystem') {
-          sessionStorage.removeItem('isComAdd');
-        }
-        if (this.$route.path !== '/activitySystem') {
-          sessionStorage.removeItem('isActAdd');
-        }
       },
       tabClick : function (name) {
-        this.$router.push({path :'/'+name})
+        this.$router.push({path :name})
       }
     },
     mounted () {
