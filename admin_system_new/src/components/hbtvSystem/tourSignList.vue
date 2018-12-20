@@ -19,12 +19,12 @@
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="enStartTime" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="enStartTime" :options="begOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="enEndTime" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="enEndTime" :options="endOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
         <span><Input v-model="userName" style="width: 200px;"/></span>
-        <span class="ml10"><Button icon="ios-search" @click="getEnlist">查询</Button></span>
+        <span class="ml10"><Button icon="ios-search" @click="enCheckClick">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
@@ -59,6 +59,18 @@
         pageSize:10,
         loading:false,
         cancelTip:false,
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.endTime);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.startTime);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
         columns:[
           {
             type: 'selection',
@@ -163,6 +175,10 @@
       this.getEnlist();
     },
     methods :{
+      enCheckClick:function () {
+        this.page = 1;
+        this.getEnlist();
+      },
       getEnlist:function () {
         this.loading = true;
         axios.TourEnlist({

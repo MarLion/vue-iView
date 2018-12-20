@@ -11,23 +11,23 @@
           <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
           <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
-          <span class="ml15">圈子名称：</span>
+          <span class="ml15">活动名称：</span>
           <span><Input style="width: 200px;"/></span>
-          <span class="ml15">圈子类型：</span>
+          <span class="ml15">状态类型：</span>
           <span>
-        <Select v-model="actType" style="width:200px" @on-change="selectType">
+        <Select v-model="actType" style="width:200px">
           <Option v-for="(item,index) in actList" :value="item.value" :key="index">{{ item.label }}</Option>
         </Select>
       </span>
-          <span class="ml10"><Button icon="ios-search">查询</Button></span>
+          <span class="ml10"><Button icon="ios-search" @click="getActivityList">查询</Button></span>
         </div>
       </div>
       <div class="activity-list mt30">
         <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-        <Page :total="total" v-if="total>10" show-elevator show-total class="mt30"/>
+        <Page :total="total" v-if="total>10" show-elevator show-total @on-change="activityPageChange" class="mt30"/>
       </div>
     </div>
-    <!--<add-view :is-show-pub="showAdd">-->
+    <!--新增-->
     <Drawer
       title="发布活动"
       v-model="value3"
@@ -40,7 +40,6 @@
           <span>
             <span class="add-tips"><Icon type="md-information-circle" />友情提示：平台运营前期，运营人员使用！</span>
           </span>
-          <!--<span class="add-close" @click="closeActAdd"><Icon type="md-close-circle" /></span>-->
         </div>
       </div>
       <div>
@@ -51,7 +50,7 @@
               <template v-if="item.status === 'finished'">
                 <img :src="item.url">
                 <div class="demo-upload-list-cover">
-                  <Icon type="ios-eye-outline" @click.native="handleView(item.name)"></Icon>
+                  <Icon type="ios-eye-outline" @click.native="handleView(item.url)"></Icon>
                   <Icon type="ios-trash-outline" @click.native="handleRemove(item)"></Icon>
                 </div>
               </template>
@@ -65,10 +64,7 @@
                     :default-file-list="defaultList"
                     :on-success="handleSuccess"
                     :format="['jpg','jpeg','png']"
-                    :max-size="2048"
                     :on-format-error="handleFormatError"
-                    :on-exceeded-size="handleMaxSize"
-                    :before-upload="handleBeforeUpload"
                     multiple
                     type="drag"
                     style="display: inline-block;width:100px;">
@@ -77,30 +73,30 @@
               </div>
             </Upload>
             <modal title="查看照片" v-model="visible">
-              <img :src="'https://o5wwk8baw.qnssl.com/' + imgName + '/large'" style="width: 100%">
+              <img :src="actBigUrl " style="width: 100%">
             </modal>
           </div>
-          <Form :model="formData" :label-width="100" style="width: 500px;margin-top: 20px;">
-            <FormItem label="活动名称">
-              <Input type="text" v-model="formData.name"></Input>
+          <Form :model="formData" ref="activityAdd" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
+            <FormItem label="活动名称" prop="name">
+              <Input type="text" v-model="formData.name"/>
             </FormItem>
-            <FormItem label="活动口号">
-              <Input type="text" v-model="formData.slogan"></Input>
+            <FormItem label="活动口号" prop="slogan">
+              <Input type="text" v-model="formData.slogan"/>
             </FormItem>
-            <FormItem label="开始时间">
-              <Input type="text" v-model="formData.beginTime"></Input>
+            <FormItem label="开始时间" prop="beginTime">
+              <DatePicker  type="datetime" format="yyyy-MM-dd HH:mm" v-model="formData.beginTime" @on-change="activityBeginTime" style="width: 100%;"></DatePicker >
             </FormItem>
-            <FormItem label="结束时间">
-              <Input type="text" v-model="formData.endTime"></Input>
+            <FormItem label="结束时间" prop="endTime">
+              <DatePicker  type="datetime" format="yyyy-MM-dd HH:mm" v-model="formData.endTime" @on-change="activityEndTime" style="width: 100%;"></DatePicker >
             </FormItem>
-            <FormItem label="活动地址">
-              <Input type="text" v-model="formData.location"></Input>
+            <FormItem label="活动地址" prop="location">
+              <Input type="text" v-model="formData.location"/>
             </FormItem>
-            <FormItem label="允许人数">
-              <Input type="text" v-model="formData.member"></Input>
+            <FormItem label="允许人数" prop="member">
+              <Input type="text" v-model="formData.member"/>
             </FormItem>
-            <FormItem label="活动内容">
-              <Input type="textarea" v-model="formData.ins"></Input>
+            <FormItem label="活动内容" prop="ins">
+              <Input type="textarea" v-model="formData.ins"/>
             </FormItem>
             <FormItem style="width: 200px!important;">
               <Checkbox v-model="formData.isOpen">开放报名</Checkbox>
@@ -112,7 +108,136 @@
         </div>
       </div>
     </Drawer>
-    <!--</add-view>-->
+    <!--详情-->
+    <Drawer
+      title="活动详情"
+      v-model="activityDetailValue"
+      width="720"
+      :mask-closable="false"
+      :styles="styles"
+    >
+      <div class="add-title">
+          <span>
+            <span class="add-tips"><Icon type="md-information-circle" />友情提示：平台运营前期，运营人员使用！</span>
+          </span>
+      </div>
+      <div class="add-image mt30">
+        <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
+        <template v-if="activityDetailData.isPhoto">
+          <div class="demo-upload-list"  v-for="item in activityDetailData.detailPhotoList">
+            <img :src="item">
+          </div>
+        </template>
+        <template v-else>
+          <div class="demo-upload-list">暂无图片</div>
+        </template>
+      </div>
+      <div class="add-detail">
+        <p class="p">活动名称：</p>
+        <p class="detailSpan">{{activityDetailData.name}}</p>
+      </div>
+      <div class="add-detail">
+        <p class="p">活动口号：</p>
+        <p class="detailSpan">{{activityDetailData.slogan}}</p>
+      </div>
+      <div class="add-detail">
+        <p class="p">开始时间：</p>
+        <p class="detailSpan">{{activityDetailData.beginTime}}</p>
+      </div>
+      <div class="add-detail">
+        <p class="p">结束时间：</p>
+        <p class="detailSpan">{{activityDetailData.endTime}}</p>
+      </div>
+      <div class="add-detail">
+        <p class="p">活动地址：</p>
+        <p class="detailSpan">{{activityDetailData.location}}</p>
+      </div>
+      <div class="add-detail">
+        <p class="p">允许人数：</p>
+        <p class="detailSpan">{{activityDetailData.member}}</p>
+      </div>
+      <div class="add-detail">
+        <p class="p">活动内容：</p>
+        <p class="detailSpan detailWidth">{{activityDetailData.ins}}</p>
+      </div>
+    </Drawer>
+    <!--修改-->
+    <Drawer
+      title="活动修改"
+      v-model="activityRevisValue"
+      width="720"
+      :mask-closable="false"
+      :styles="styles"
+    >
+      <div class="add-title">
+          <span>
+            <span class="add-tips"><Icon type="md-information-circle" />友情提示：平台运营前期，运营人员使用！</span>
+          </span>
+      </div>
+      <div class="add-form mt30">
+        <div class="add-image">
+          <p class="p">上传照片</p>
+          <div class="demo-upload-list" v-for="item in uploadList">
+            <template v-if="item.status === 'finished'">
+              <img :src="item.url">
+              <div class="demo-upload-list-cover">
+                <Icon type="ios-eye-outline" @click.native="activityHandleView(item.url)"></Icon>
+                <Icon type="ios-trash-outline" @click.native="activityHandleRemove(item)"></Icon>
+              </div>
+            </template>
+            <template v-else>
+              <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+            </template>
+          </div>
+          <Upload action=""
+                  ref="upload"
+                  :show-upload-list="false"
+                  :default-file-list="activityReviseDefaultList"
+                  :on-success="activityHandleSuccess"
+                  :format="['jpg','jpeg','png']"
+                  :on-format-error="handleFormatError"
+                  multiple
+                  type="drag"
+                  style="display: inline-block;width:100px;">
+            <div style="width: 100px;height:100px;line-height: 100px;">
+              <Icon type="ios-camera" size="40"></Icon>
+            </div>
+          </Upload>
+          <modal title="查看照片" v-model="activityReviseVisible">
+            <img :src="activityReviseImgUrl " style="width: 100%">
+          </modal>
+        </div>
+        <Form :model="activityReviseFormData" ref="activityRevise" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
+          <FormItem label="活动名称" prop="name">
+            <Input type="text" v-model="activityReviseFormData.name"/>
+          </FormItem>
+          <FormItem label="活动口号" prop="slogan">
+            <Input type="text" v-model="activityReviseFormData.slogan"/>
+          </FormItem>
+          <FormItem label="开始时间" prop="beginTime">
+            <DatePicker type="datetime" v-model="activityReviseFormData.beginTime" @on-change="activityReviseBeg" style="width: 100%;"></DatePicker>
+          </FormItem>
+          <FormItem label="结束时间" prop="endTime">
+            <DatePicker type="datetime" v-model="activityReviseFormData.endTime" @on-change="activityReviseEnd" style="width: 100%;"></DatePicker>
+          </FormItem>
+          <FormItem label="活动地址" prop="location">
+            <Input type="text" v-model="activityReviseFormData.location"/>
+          </FormItem>
+          <FormItem label="允许人数" prop="member">
+            <Input type="text" v-model="activityReviseFormData.member"/>
+          </FormItem>
+          <FormItem label="活动内容" prop="ins">
+            <Input type="textarea" v-model="activityReviseFormData.ins"/>
+          </FormItem>
+          <FormItem style="width: 200px!important;">
+            <Checkbox v-model="activityReviseFormData.isOpen">开放报名</Checkbox>
+          </FormItem>
+          <FormItem style="width: 200px!important;">
+            <Button type="primary">确定修改</Button>
+          </FormItem>
+        </Form>
+      </div>
+    </Drawer>
   </div>
 </template>
 
@@ -120,8 +245,59 @@
   export default {
     name: "activitySystem",
     data () {
+      const validateName = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动名称'));
+        } else {
+          callback();
+        }
+      };
+      const validateSlogan = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动口号'));
+        } else {
+          callback();
+        }
+      };
+      const validateBeginTime = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动开始时间'));
+        } else {
+          callback();
+        }
+      };
+      const validateEndTime = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动结束时间'));
+        } else {
+          callback();
+        }
+      };
+      const validateLocation = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动地址'));
+        } else {
+          callback();
+        }
+      };
+      const validateMember = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写允许人数'));
+        } else {
+          callback();
+        }
+      };
+      const validateIns = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动内容'));
+        } else {
+          callback();
+        }
+      };
       return {
         value3:false,
+        activityDetailValue:false,
+        activityRevisValue:false,
         styles: {
           height: 'calc(100% - 55px)',
           overflow: 'auto',
@@ -135,21 +311,20 @@
         actList:[
           {
             value:'0',
-            label:'读书'
+            label:'正常'
           },
           {
             value:'1',
-            label:'看电影'
+            label:'已结束'
+          },
+          {
+            value:'2',
+            label:'已取消'
           }
         ],
         columns:[
           {
-            title:'圈子ID',
-            key:'id',
-            align:'center',
-          },
-          {
-            title:'圈子名称',
+            title:'活动编号',
             key:'name',
             align:'center',
           },
@@ -174,20 +349,10 @@
             align:'center',
           },
           {
-            title:'当期人数',
+            title:'报名人数',
             key:'member',
             align:'center',
             width:100
-          },
-          {
-            title:'口号',
-            key:'slogan',
-            align:'center',
-          },
-          {
-            title:'介绍',
-            key:'ins',
-            align:'center',
           },
           {
             title:'操作选项',
@@ -206,7 +371,7 @@
                   },
                   on: {
                     click: () => {
-                      console.log(params.index);
+                      this.activityDetailValue = true;
                     }
                   }
                 }, '详情'),
@@ -220,10 +385,10 @@
                   },
                   on: {
                     click: () => {
-                      // this.remove(params.index)
+                      this.activityRevisValue = true;
                     }
                   }
-                }, '关联用户'),
+                }, '修改'),
                 h('Button', {
                   props: {
                     type: 'error',
@@ -237,7 +402,7 @@
 
                     }
                   }
-                }, '解散'),
+                }, '取消'),
                 h('Button', {
                   props: {
                     type: 'warning',
@@ -245,113 +410,15 @@
                   },
                   on: {
                     click: () => {
+                      this.$router.push({path:'/activityUserList'})
                     }
                   }
-                }, '监管')
+                }, '报名清单')
               ])
             }
           }
         ],
         listData:[
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            actName:'周末约会',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
           {
             id:'0001',
             name:'一起来奔跑',
@@ -375,8 +442,9 @@
             'url': 'https://o5wwk8baw.qnssl.com/bc7521e033abdd1e92222d733590f104/avatar'
           }
         ],
+        //新增数据
         uploadList:[],
-        imgName:'',
+        actBigUrl:'',
         visible:false,
         formData:{
           name:'',
@@ -387,50 +455,116 @@
           member:'',
           ins:'',
           isOpen:true
+        },
+        //详情数据
+        activityDetailData:{
+          isPhoto:false,
+          detailPhotoList:[],
+          name:'',
+          slogan:'',
+          beginTime:'',
+          endTime:'',
+          location:'',
+          member:'',
+          ins:'',
+        },
+        //修改数据
+        activityReviseVisible:false,
+        activityReviseUploadList:[],
+        activityReviseDefaultList:[],
+        activityRevisePath:'',
+        activityReviseImgUrl:'',
+        activityReviseId:'',
+        activityReviseFormData:{
+          creatorId:'123456',
+          name:'',
+          slogan:'',
+          beginTime:'',
+          endTime:'',
+          location:'',
+          member:'',
+          ins:'',
+          isOpen:true
+        },
+        //表单验证
+        ruleValidate:{
+          name:[
+            {validator:validateName}
+            ],
+          slogan:[
+            {validator:validateSlogan}
+          ],
+          beginTime:[
+            {validator:validateBeginTime}
+          ],
+          endTime:[
+            {validator:validateEndTime}
+          ],
+          location:[
+            {validator:validateLocation}
+          ],
+          member:[
+            {validator:validateMember}
+          ],
+          ins:[
+            {validator:validateIns}
+          ]
         }
       }
     },
     mounted () {
-      // if (sessionStorage.getItem('isActAdd') != null) {
-      //   this.showAdd = JSON.parse(sessionStorage.getItem('isActAdd'));
-      // }
+      this.getActivityList();
       this.uploadList = this.$refs.upload.fileList;
     },
     methods: {
-      selectType:function (t) {
+      getActivityList:function () {
 
       },
       exportData:function () {
 
       },
       activityAdd :function () {
-        // this.showAdd = true;
-        // sessionStorage.setItem('isActAdd',this.showAdd);
         this.value3 = true;
       },
-      //上传头像方法
+      activityPageChange:function () {
+
+      },
+      activityBeginTime:function (date) {
+        this.formData.beginTime =  date;
+      },
+      activityEndTime:function (date) {
+        this.formData.endTime = date;
+      },
+      //上传头像方法  新增方法
       handleSuccess:function () {
 
       },
       handleFormatError:function () {
 
       },
-      handleMaxSize:function () {
-
-      },
-      handleBeforeUpload:function () {
-
-      },
-      handleView:function (name) {
-        this.imgName = name;
-        this.visible = true;
+      handleView:function (url) {
+        this.actBigUrl = url;
+        this.activityReviseVisible = true;
       },
       handleRemove:function () {
 
       },
-      closeActAdd :function () {
-        this.showAdd = false;
-        sessionStorage.setItem('isActAdd',this.showAdd);
+      //修改方法
+      activityHandleSuccess:function () {
+
+      },
+      activityHandleView:function (url) {
+        this.activityReviseImgUrl = url;
+        this.visible = true;
+      },
+      activityHandleRemove:function () {
+
+      },
+      activityReviseBeg:function (date) {
+        this.activityReviseFormData.beginTime = date;
+      },
+      activityReviseEnd:function (date) {
+        this.activityReviseFormData.endTime = date;
       }
     }
   }
@@ -477,6 +611,23 @@
       text-align: right;
       padding: 10px 12px 10px 0;
     }
+  }
+  .add-detail{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: 40px;
+    .p{
+      width: 100px;
+      text-align: right;
+      padding: 10px 12px 10px 0;
+    }
+  }
+  .detailSpan{
+    padding: 10px 0;
+  }
+  .detailWidth{
+    width: 500px;
   }
   .demo-upload-list{
     display: inline-block;

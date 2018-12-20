@@ -19,12 +19,12 @@
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signBeg" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signBeg" :options="begOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signEnd" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
         <span><Input v-model="signParam.userName" style="width: 200px;"/></span>
-        <span class="ml10"><Button icon="ios-search" @click="getTicSignList">查询</Button></span>
+        <span class="ml10"><Button icon="ios-search" @click="ticSignListClick">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
@@ -62,7 +62,19 @@
           enterTimeEnd:'',
           userName:''
         },
-        total:100,
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.signParam.enterTimeEnd);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.signParam.enterTimeStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
+        total:'',
         columns:[
           {
             type: 'selection',
@@ -122,7 +134,7 @@
                     },
                     on: {
                       click: () => {
-                        console.log(params.row.id);
+                        //console.log(params.row.id);
                         axios.TicketSignCancel({id:params.row.id})
                           .then(res => {
                             this.ticSignTip = true;
@@ -166,11 +178,15 @@
       this.getTicSignList();
     },
     methods:{
+      ticSignListClick:function () {
+        this.signParam.page = 1;
+        this.getTicSignList();
+      },
       getTicSignList:function () {
         this.loading= true;
         axios.TicketSignList(this.signParam)
           .then(res => {
-            //console.log(JSON.stringify(res.result.list[0]));
+            console.log(res.result.list);
             if (res.code === 200) {
               this.loading = false;
               this.listData = res.result.list;

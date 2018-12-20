@@ -36,5 +36,17 @@ export default {
       transed = date;
     }
     return transed;
+  },
+  //获取当前日期
+  getCurrentDate:function () {
+    let current = '';
+    let date = new Date();
+    let year = date.getFullYear();
+    let mon = date.getMonth() + 1;
+    let day = date.getDate();
+    mon = mon > 9 ? mon : '0' + mon;
+    day = day > 9 ? day : '0' + day;
+    current = year + '-' + mon + '-' + day;
+    return current;
   }
 }

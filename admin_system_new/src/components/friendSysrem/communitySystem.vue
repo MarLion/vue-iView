@@ -8,26 +8,26 @@
         </div>
         <div class="community-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="comBeginTime" :options="begOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="comEndTime" :options="endOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">圈子名称：</span>
-          <span><Input style="width: 200px;"/></span>
+          <span><Input v-model="listParams.name" style="width: 200px;"/></span>
           <span class="ml15">圈子类型：</span>
           <span>
-            <Select v-model="comType" style="width:200px" @on-change="selectType">
+            <Select v-model="listParams.status" style="width:200px">
               <Option v-for="(item,index) in comList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
-          <span class="ml10"><Button icon="ios-search">查询</Button></span>
+          <span class="ml10"><Button icon="ios-search" @click="getCommunityList">查询</Button></span>
         </div>
       </div>
       <div class="community-list mt30">
         <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-        <Page :total="total" v-if="total>10" show-elevator show-total class="mt30"/>
+        <Page :total="total" v-if="total>10" show-elevator show-total @on-change="pageChangeCheck" class="mt30"/>
       </div>
     </div>
-    <!--<add-view :is-show-pub="isShowAdd">-->
+    <!--新增圈子-->
     <Drawer
       title="新增圈子"
       v-model="value3"
@@ -40,9 +40,6 @@
           <span>
             <span class="add-tips"><Icon type="md-information-circle" />友情提示：平台运营前期，运营人员使用！</span>
           </span>
-          <!--<span class="add-close" @click="closeAdd">-->
-            <!--<Icon type="md-close-circle" />-->
-          <!--</span>-->
         </div>
       </div>
       <div>
@@ -53,7 +50,7 @@
               <template v-if="item.status === 'finished'">
                 <img :src="item.url">
                 <div class="demo-upload-list-cover">
-                  <Icon type="ios-eye-outline" @click.native="handleView(item.name)"></Icon>
+                  <Icon type="ios-eye-outline" @click.native="handleView(item.url)"></Icon>
                   <Icon type="ios-trash-outline" @click.native="handleRemove(item)"></Icon>
                 </div>
               </template>
@@ -62,15 +59,12 @@
               </template>
             </div>
             <Upload action=""
-                    ref="upload"
+                    ref="comUpload"
                     :show-upload-list="false"
                     :default-file-list="defaultList"
                     :on-success="handleSuccess"
                     :format="['jpg','jpeg','png']"
-                    :max-size="2048"
                     :on-format-error="handleFormatError"
-                    :on-exceeded-size="handleMaxSize"
-                    :before-upload="handleBeforeUpload"
                     multiple
                     type="drag"
                     style="display: inline-block;width:100px;">
@@ -79,26 +73,26 @@
               </div>
             </Upload>
             <modal title="查看照片" v-model="visible">
-              <img :src="'https://o5wwk8baw.qnssl.com/' + imgName + '/large'" style="width: 100%">
+              <img :src="comBigUrl" style="width: 100%">
             </modal>
           </div>
-          <Form :model="formData" :label-width="100" style="width: 500px;margin-top: 20px;">
-            <FormItem label="圈子名称">
+          <Form :model="formData" ref="communityAdd" :rules="validateRules" :label-width="100" style="width: 500px;margin-top: 20px;">
+            <FormItem label="圈子名称" prop="name">
               <Input type="text" v-model="formData.name"></Input>
             </FormItem>
-            <FormItem label="贵圈口号">
+            <FormItem label="贵圈口号" prop="slogan">
               <Input type="text" v-model="formData.slogan"></Input>
             </FormItem>
-            <FormItem label="贵圈标签">
+            <FormItem label="贵圈标签" prop="label">
               <Input type="text" v-model="formData.label"></Input>
             </FormItem>
-            <FormItem label="贵圈坐标">
+            <FormItem label="贵圈坐标" prop="location">
               <Input type="text" v-model="formData.location"></Input>
             </FormItem>
-            <FormItem label="允许人数">
+            <FormItem label="允许人数" prop="member">
               <Input type="text" v-model="formData.member"></Input>
             </FormItem>
-            <FormItem label="贵圈介绍">
+            <FormItem label="贵圈介绍" prop="ins">
               <Input type="textarea" v-model="formData.ins"></Input>
             </FormItem>
             <FormItem style="width: 200px!important;">
@@ -111,77 +105,230 @@
         </div>
       </div>
     </Drawer>
-    <!--</add-view>-->
+    <!--圈子详情-->
+    <Drawer
+      title="圈子详情"
+      v-model="comDetailVaule"
+      width="720"
+      :mask-closable="false"
+      :styles="styles"
+    >
+      <div class="add-title">
+        <span>
+          <span class="add-tips"><Icon type="md-information-circle" />友情提示：平台运营前期，运营人员使用！</span>
+        </span>
+      </div>
+      <div class="add-form mt30">
+        <div class="add-image">
+          <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
+          <template v-if="comDetailData.isPhoto">
+            <div class="demo-upload-list"  v-for="item in comDetailData.detailUploadList">
+              <img :src="item">
+            </div>
+          </template>
+          <template v-else>
+            <div class="demo-upload-list">暂无图片</div>
+          </template>
+        </div>
+        <div class="add-detail">
+          <p class="p">圈子名称：</p>
+          <p class="detailSpan">{{comDetailData.name}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">圈&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;主：</p>
+          <p class="detailSpan">{{comDetailData.userName}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">创建日期：</p>
+          <p class="detailSpan">{{comDetailData.createTime}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">当前人数：</p>
+          <p class="detailSpan">{{comDetailData.nowPerson}}</p>
+          <p class="detailSpan">人</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">允许人数：</p>
+          <p class="detailSpan">{{comDetailData.amount}}</p>
+          <p class="detailSpan">人</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">圈子口号：</p>
+          <p class="detailSpan detailWidth">{{comDetailData.slogan}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">圈子介绍：</p>
+          <p class="detailSpan detailWidth">{{comDetailData.description}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">开放报名：</p>
+          <p class="detailSpan detailWidth">{{comDetailData.isOpenName}}</p>
+        </div>
+      </div>
+    </Drawer>
+    <Modal
+      title="提示"
+      v-model="communityTip"
+    >
+      <p ref="communityTip"></p>
+      <div slot="footer">
+        <Button type="info"  @click="del">确定</Button>
+      </div>
+    </Modal>
+    <Modal
+      title="提示"
+      v-model="addSuccess"
+    >
+      <p ref="addTip"></p>
+      <div slot="footer">
+        <Button type="warning"  @click="goList">返回列表</Button>
+        <Button type="info"  @click="addMore">继续添加</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
 <script>
+  import axios from "../../axios/axios";
+  import * as base from '../../axios/base';
   export default {
     name: "communitySystem",
     data () {
+      const validateName = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写圈子名称'));
+        } else {
+          callback();
+        }
+      };
+      const validateSlogan = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写圈子口号'));
+        } else {
+          callback();
+        }
+      };
+      const validateLabel = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写圈子标签'));
+        } else {
+          callback();
+        }
+      };
+      const validateLocation = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写圈子坐标'));
+        } else {
+          callback();
+        }
+      };
+      const validateMember = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写允许人数'));
+        } else {
+          callback();
+        }
+      };
+      const validateIns = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写圈子介绍'));
+        } else {
+          callback();
+        }
+      };
       return {
         value3:false,
+        comDetailVaule:false,
+        communityTip:false,
+        addSuccess:false,
         styles: {
           height: 'calc(100% - 55px)',
           overflow: 'auto',
           paddingBottom: '53px',
           position: 'static'
         },
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.listParams.createTimeEnd);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.listParams.createTimeStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
         isShowAdd:false,
         loading:false,
-        total:100,
-        comType:'',
+        total:'',
+        listParams:{
+          name:'',
+          createTimeStart:'',
+          createTimeEnd:'',
+          status:'',
+          page:1,
+          size:10
+        },
         comList:[
           {
+            value:'3',
+            label:'全部'
+          },
+          {
             value:'0',
-            label:'读书'
+            label:'激活'
           },
           {
             value:'1',
-            label:'看电影'
+            label:'监管'
+          },
+          {
+            value:'2',
+            label:'已解散'
           }
         ],
         columns:[
           {
-            title:'圈子ID',
-            key:'id',
-            align:'center',
+            title:'圈子编号',
+            key:'communityNo',
+            align:'center'
           },
           {
             title:'圈子名称',
             key:'name',
-            align:'center',
+            align:'center'
           },
           {
-            title:'创建人',
-            key:'builder',
-            align:'center',
+            title:'圈主',
+            key:'userName',
+            align:'center'
           },
           {
             title:'状态',
-            key:'state',
-            align:'center',
+            key:'statusName',
+            align:'center'
           },
           {
             title:'创建日期',
-            key:'date',
-            align:'center',
+            key:'createTime',
+            align:'center'
           },
           {
-            title:'当期人数',
-            key:'member',
+            title:'当前人数',
+            key:'nowPerson',
             align:'center',
             width:100
           },
           {
             title:'口号',
             key:'slogan',
-            align:'center',
+            align:'center'
           },
           {
             title:'介绍',
-            key:'ins',
-            align:'center',
+            key:'description',
+            align:'center'
           },
           {
             title:'操作选项',
@@ -189,178 +336,106 @@
             align:'center',
             width:260,
             render:(h,params) => {
-              return h('div',[
-                h('Button', {
-                  props: {
-                    type: 'success',
-                    size: 'small'
-                  },
-                  style: {
-                    marginRight: '5px'
-                  },
-                  on: {
-                    click: () => {
-                      console.log(params.index);
+              if (params.row.status === 2) {
+                return h('div', [
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small',
+                      disabled:true
+                    },
+                    style: {
+                      marginRight: '5px'
                     }
-                  }
-                }, '详情'),
-                h('Button', {
-                  props: {
-                    type: 'info',
-                    size: 'small'
-                  },
-                  style: {
-                    marginRight: '5px'
-                  },
-                  on: {
-                    click: () => {
-                      // this.remove(params.index)
+                  }, '该圈子已解散')
+                ])
+              } else {
+                return h('div',[
+                  h('Button', {
+                    props: {
+                      type: 'success',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        axios.CommunityDetail({id:params.row.id})
+                          .then(res => {
+                            console.log(res);
+                            if (res.code === 200) {
+                              this.comDetailData.name = res.result.name;
+                              this.comDetailData.userName = res.result.userName;
+                              this.comDetailData.createTime = res.result.createTime;
+                              this.comDetailData.amount = res.result.amount;
+                              this.comDetailData.nowPerson = res.result.nowPerson;
+                              this.comDetailData.slogan = res.result.slogan;
+                              this.comDetailData.description = res.result.description;
+                              this.comDetailData.isOpenName = res.result.isOpenName;
+                              this.comDetailVaule = true;
+                            } else {
+                              this.communityTip = true;
+                              this.$refs.communityTip.innerHTML = res.message;
+                            }
+                          })
+                          .catch(error => {
+                            console.log(error);
+                            this.communityTip = true;
+                            this.$refs.communityTip.innerHTML = '查询出错！';
+                          })
+                      }
                     }
-                  }
-                }, '关联用户'),
-                h('Button', {
-                  props: {
-                    type: 'error',
-                    size: 'small'
-                  },
-                  style: {
-                    marginRight: '5px'
-                  },
-                  on: {
-                    click: () => {
-
+                  }, '详情'),
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        //console.log(params.row.id);
+                        axios.CommunityDissolve({id:params.row.id})
+                          .then(res => {
+                            //console.log(res);
+                            this.communityTip = true;
+                            this.$refs.communityTip.innerHTML =res.message;
+                            if (res.code === 200) {
+                              this.getCommunityList();
+                            }
+                          })
+                          .catch(error => {
+                            console.log(error);
+                            this.communityTip = true;
+                            this.$refs.communityTip.innerHTML = '解散出错！';
+                          })
+                      }
                     }
-                  }
-                }, '解散'),
-                h('Button', {
-                  props: {
-                    type: 'warning',
-                    size: 'small'
-                  },
-                  on: {
-                    click: () => {
+                  }, '解散'),
+                  h('Button', {
+                    props: {
+                      type: 'warning',
+                      size: 'small'
+                    },
+                    on: {
+                      click: () => {
+                        this.$router.push({path:'/communityUserList'});
+                      }
                     }
-                  }
-                }, '监管')
-              ])
+                  }, '用户清单')
+                ])
+              }
             }
           }
         ],
-        listData:[
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          },
-          {
-            id:'0001',
-            name:'一起来奔跑',
-            builder:'张三',
-            state:'正常',
-            date:'2018-11-22',
-            member:'30',
-            slogan:'生命在于运动',
-            ins:'武汉跑步圈，跑出自信'
-          }
-        ],
+        listData:[],
         //新增圈子data
-        defaultList:[
-          {
-            'name': 'a42bdcc1178e62b4694c830f028db5c0',
-            'url': 'https://o5wwk8baw.qnssl.com/a42bdcc1178e62b4694c830f028db5c0/avatar'
-          },
-          {
-            'name': 'bc7521e033abdd1e92222d733590f104',
-            'url': 'https://o5wwk8baw.qnssl.com/bc7521e033abdd1e92222d733590f104/avatar'
-          }
-        ],
+        defaultList:[],
         uploadList:[],
-        imgName:'',
+        comBigUrl:'',
         visible:false,
         formData:{
           name:'',
@@ -370,26 +445,81 @@
           member:'',
           ins:'',
           isOpen:true
+        },
+        //圈子详情
+        comDetailData:{
+          isPhoto:false,
+          detailUploadList:[],
+          name:'',
+          userName:'',
+          createTime:'',
+          amount:'',
+          nowPerson:'',
+          slogan:'',
+          description:'',
+          isOpenName:''
+        },
+        validateRules:{
+          name:[
+            {validator:validateName}
+          ],
+          slogan:[
+            {validator:validateSlogan}
+          ],
+          label:[
+            {validator:validateLabel}
+          ],
+          location:[
+            {validator:validateLocation}
+          ],
+          member:[
+            {validator:validateMember}
+          ],
+          ins:[
+            {validator:validateIns}
+          ]
         }
       }
     },
     mounted () {
-      // if (sessionStorage.getItem('isComAdd') != null) {
-      //   this.isShowAdd = JSON.parse(sessionStorage.getItem('isComAdd'));
-      // }
-      this.uploadList = this.$refs.upload.fileList;
+      this.getCommunityList();
+      this.uploadList = this.$refs.comUpload.fileList;
     },
     methods: {
-      selectType:function (t) {
-
+      comBeginTime:function (date) {
+        this.listParams.createTimeStart = date;
+      },
+      comEndTime:function (date) {
+        this.listParams.createTimeEnd = date;
+      },
+      getCommunityList:function () {
+        this.loading = true;
+        axios.GetCommunityList(this.listParams)
+          .then(res => {
+            if (res.code === 200) {
+              this.loading = false;
+              this.listData = res.result.list;
+              this.total = res.result.total;
+            } else {
+              this.communityTip = true;
+              this.$refs.communityTip.innerHTML = res.message;
+            }
+          })
+          .catch(error => {
+            console.log(error);
+            this.communityTip = true;
+            this.$refs.communityTip.innerHTML = '查询出错！';
+          })
       },
       exportData:function () {
-
+        window.location.href = base.baseUrl + 'community/exportCommunityList?name='+this.listParams.name+'&status='+this.listParams.status+'&createTimeStart='+this.listParams.createTimeStart+'&createTimeEnd='+this.listParams.createTimeEnd;
       },
       addCommunity:function () {
-        // this.isShowAdd = true;
-        // sessionStorage.setItem('isComAdd',this.isShowAdd);
         this.value3 = true;
+      },
+      pageChangeCheck:function (page) {
+        this.listParams.page = page;
+        this.getCommunityList();
       },
       //上传照片方法
       handleSuccess:function () {
@@ -398,14 +528,8 @@
       handleFormatError:function () {
 
       },
-      handleMaxSize:function () {
-
-      },
-      handleBeforeUpload:function () {
-
-      },
-      handleView:function (name) {
-        this.imgName = name;
+      handleView:function (url) {
+        this.comBigUrl = url;
         this.visible = true;
       },
       handleRemove:function () {
@@ -414,6 +538,15 @@
       closeAdd :function () {
         this.isShowAdd = false;
         sessionStorage.setItem('isComAdd',this.isShowAdd);
+      },
+      del:function () {
+        this.communityTip = false;
+      },
+      goList:function () {
+
+      },
+      addMore:function () {
+
       }
     }
   }
@@ -460,6 +593,23 @@
       text-align: right;
       padding: 10px 12px 10px 0;
     }
+  }
+  .add-detail{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-start;
+    margin-top: 40px;
+    .p{
+      width: 100px;
+      text-align: right;
+      padding: 10px 12px 10px 0;
+    }
+  }
+  .detailSpan{
+    padding: 10px 0;
+  }
+  .detailWidth{
+    width: 500px;
   }
   .demo-upload-list{
     display: inline-block;

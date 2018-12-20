@@ -8,9 +8,9 @@
         </div>
         <div class="data-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckStart" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckStart" :options="begOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckEnd" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">活动名称：</span>
           <span><Input v-model="dataCheckedPra.name" style="width: 200px;"/></span>
           <span class="ml15">状态类型：</span>
@@ -19,7 +19,7 @@
               <Option v-for="(item,index) in dataList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
-          <span class="ml10"><Button icon="ios-search" @click="getDataList">查询</Button></span>
+          <span class="ml10"><Button icon="ios-search" @click="checkClickData">查询</Button></span>
         </div>
       </div>
       <div class="data-list mt30">
@@ -45,63 +45,89 @@
       </div>
       <div>
         <div class="add-form mt30">
-          <div class="add-image">
-            <p class="p">上传照片</p>
-            <div class="demo-upload-list" v-for="item in uploadList">
-              <template v-if="item.status === 'finished'">
-                <img :src="item.url">
-                <div class="demo-upload-list-cover">
-                  <Icon type="ios-eye-outline" @click.native="handleView(item.url)"></Icon>
-                  <Icon type="ios-trash-outline" @click.native="handleRemove(item)"></Icon>
-                </div>
-              </template>
-              <template v-else>
-                <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
-              </template>
-            </div>
-            <Upload :action="uploadUrl"
-                    ref="dataUpload"
-                    :show-upload-list="false"
-                    :on-success="handleSuccess"
-                    :format="['jpg','jpeg','png']"
-                    :on-format-error="handleFormatError"
-                    multiple
-                    type="drag"
-                    style="display: inline-block;width:100px;">
-              <div style="width: 100px;height:100px;line-height: 100px;">
-                <Icon type="ios-camera" size="40"></Icon>
+          <div class="divs">
+            <p class="p">上传照片：</p>
+            <div class="add-image">
+              <div class="demo-upload-list" v-for="item in uploadList">
+                <template v-if="item.status === 'finished'">
+                  <img :src="item.url">
+                  <div class="demo-upload-list-cover">
+                    <Icon type="ios-eye-outline" @click.native="handleView(item.url)"></Icon>
+                    <Icon type="ios-trash-outline" @click.native="handleRemove(item)"></Icon>
+                  </div>
+                </template>
+                <template v-else>
+                  <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+                </template>
               </div>
-            </Upload>
-            <modal title="查看照片" v-model="visible">
-              <img :src='dataImgUrl' style="width: 100%">
-            </modal>
+              <Upload :action="uploadUrl"
+                      ref="dataUpload"
+                      :show-upload-list="false"
+                      :on-success="handleSuccess"
+                      :format="['jpg','jpeg','png','bmp']"
+                      :on-format-error="handleFormatError"
+                      :before-upload="handleBeforeUpload"
+                      multiple
+                      type="drag"
+                      style="display: inline-block;width:100px;">
+                <div style="width: 100px;height:100px;line-height: 100px;">
+                  <Icon type="ios-camera" size="40"></Icon>
+                </div>
+              </Upload>
+              <Modal title="查看照片" v-model="visible">
+                <img :src='dataImgUrl' style="width: 100%">
+                <div slot="footer"></div>
+              </Modal>
+            </div>
           </div>
           <Form :model="dataFormData" ref="dataForm" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-            <FormItem label="活动名称" prop="name">
+            <FormItem label="活动名称：" prop="name">
               <Input type="text" v-model="dataFormData.name"></Input>
             </FormItem>
-            <FormItem label="活动费用">
-              <Input type="text" v-model="dataFormData.price" @on-change="feeChanged" @on-blur="feeBlur" style="width: 80%;"></Input><Checkbox v-model="isOpen" @on-change="freeChange" class="ml15">免费</Checkbox>
+            <FormItem label="活动费用：">
+              <InputNumber  v-model="dataFormData.price" :max="10000000" :min="0" @on-change="feeChanged" @on-blur="feeBlur" style="width: 80%;"></InputNumber><Checkbox v-model="isOpen" @on-change="freeChange" class="ml15">免费</Checkbox>
             </FormItem>
-            <FormItem label="开始时间" prop="activityStart">
-              <DatePicker type="datetime" format="yyyy-MM-dd HH:mm" v-model="dataFormData.activityStart" @on-change="dataBeginTime" style="width: 100%;"></DatePicker>
+            <FormItem label="开始时间：">
+              <Row>
+                <Col span="10">
+                  <FormItem prop="activityStart">
+                    <DatePicker type="date" format="yyyy-MM-dd" v-model="dataFormData.activityStart" @on-change="dataBeginTime" placeholder="选择开始日期" style="width: 150px;"></DatePicker>
+                  </FormItem>
+                </Col>
+                <Col span="10">
+                  <FormItem prop="activityClockStart">
+                    <TimePicker type="time" format="HH:mm" v-model="dataFormData.activityStartHms" @on-change="dataBeginClock" placeholder=选择开始时间 style="width: 150px;"></TimePicker>
+                  </FormItem>
+                </Col>
+              </Row>
             </FormItem>
-            <FormItem label="结束时间" prop="activityEnd">
-              <DatePicker type="datetime" format="yyyy-MM-dd HH:mm" v-model="dataFormData.activityEnd" @on-change="dataEndTime" style="width: 100%;"></DatePicker>
+            <FormItem label="结束时间：">
+              <Row>
+                <Col span="10">
+                  <FormItem prop="activityEnd">
+                    <DatePicker type="date" format="yyyy-MM-dd" v-model="dataFormData.activityEnd" @on-change="dataEndTime" :options="addOption" placeholder="选择结束日期" style="width: 150px;"></DatePicker>
+                  </FormItem>
+                </Col>
+                <Col span="10">
+                  <FormItem prop="activityClockEnd">
+                    <TimePicker type="time" format="HH:mm" v-model="dataFormData.activityEndHms" @on-change="dataEndClock" :options="addOption" placeholder="选择结束时间" style="width: 150px;"></TimePicker>
+                  </FormItem>
+                </Col>
+              </Row>
             </FormItem>
-            <FormItem label="活动地址" prop="address">
-              <Input type="text" v-model="dataFormData.address"></Input>
+            <FormItem label="活动地址：" prop="address">
+              <Input type="text" :maxlength="80" v-model="dataFormData.address"></Input>
             </FormItem>
-            <FormItem label="允许人数" prop="num">
-              <Input type="text" v-model="dataFormData.num"></Input>
+            <FormItem label="允许人数：" prop="num">
+              <InputNumber v-model="dataFormData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
             </FormItem>
-            <FormItem label="参与方式" prop="participate">
-              <Input type="text" v-model="dataFormData.participate"></Input>
+            <FormItem label="参与方式：" prop="participate">
+              <Input type="text" :maxlength="50" v-model="dataFormData.participate"></Input>
             </FormItem>
-            <FormItem label="活动介绍" prop="description">
-              <Input type="textarea" v-model="dataFormData.description"></Input>
+            <FormItem label="活动介绍：" prop="description">
+              <Input type="textarea" :maxlength="1000" v-model="dataFormData.description"></Input>
             </FormItem>
-            <FormItem label="活动安排" prop="arrangement">
+            <FormItem label="活动安排：" :maxlength="1000" prop="arrangement">
               <Input type="textarea" v-model="dataFormData.arrangement"></Input>
             </FormItem>
             <FormItem style="width: 200px!important;">
@@ -126,16 +152,18 @@
           </span>
       </div>
       <div class="add-form mt30">
-        <div class="add-image">
+        <div class="divs">
           <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
-          <template v-if="dataDetailData.isPhoto">
-            <div class="demo-upload-list"  v-for="item in dataDetailData.dataDetailUploadList">
-              <img :src="item">
-            </div>
-          </template>
-          <template v-else>
-            <div class="demo-upload-list">暂无图片</div>
-          </template>
+          <div class="add-image">
+            <template v-if="dataDetailData.isPhoto">
+              <div class="demo-upload-list"  v-for="item in dataDetailData.dataDetailUploadList">
+                <img :src="item">
+              </div>
+            </template>
+            <template v-else>
+              <div class="demo-upload-list">暂无图片</div>
+            </template>
+          </div>
         </div>
         <div class="add-detail">
           <p class="p">活动名称：</p>
@@ -190,65 +218,91 @@
           </span>
       </div>
       <div class="add-form mt30">
-        <div class="add-image">
-          <p class="p">上传照片</p>
-          <div class="demo-upload-list" v-for="item in dataUploadReviseList">
-            <template v-if="item.status === 'finished'">
-              <img :src="item.url">
-              <div class="demo-upload-list-cover">
-                <Icon type="ios-eye-outline" @click.native="dataReviseView(item.url)"></Icon>
-                <Icon type="ios-trash-outline" @click.native="dataReviseRemove(item)"></Icon>
-              </div>
-            </template>
-            <template v-else>
-              <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
-            </template>
-          </div>
-          <Upload :action="uploadUrl"
-                  ref="dataReviseUpload"
-                  :show-upload-list="false"
-                  :default-file-list="dataReviseDefault"
-                  :on-success="handleReviseSuccess"
-                  :format="['jpg','jpeg','png']"
-                  :on-format-error="handleFormatError"
-                  multiple
-                  type="drag"
-                  style="display: inline-block;width:100px;">
-            <div style="width: 100px;height:100px;line-height: 100px;">
-              <Icon type="ios-camera" size="40"></Icon>
+        <div class="divs">
+          <p class="p">上传照片：</p>
+          <div class="add-image">
+            <div class="demo-upload-list" v-for="item in dataUploadReviseList">
+              <template v-if="item.status === 'finished'">
+                <img :src="item.url">
+                <div class="demo-upload-list-cover">
+                  <Icon type="ios-eye-outline" @click.native="dataReviseView(item.url)"></Icon>
+                  <Icon type="ios-trash-outline" @click.native="dataReviseRemove(item)"></Icon>
+                </div>
+              </template>
+              <template v-else>
+                <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+              </template>
             </div>
-          </Upload>
-          <modal title="查看照片" v-model="dataReviseVisible">
-            <img :src='dataReviseImgUrl' style="width: 100%">
-          </modal>
+            <Upload :action="uploadUrl"
+                    ref="dataReviseUpload"
+                    :show-upload-list="false"
+                    :default-file-list="dataReviseDefault"
+                    :on-success="handleReviseSuccess"
+                    :format="['jpg','jpeg','png','bmp']"
+                    :on-format-error="handleFormatError"
+                    :before-upload="handleBeforeUploadRevise"
+                    multiple
+                    type="drag"
+                    style="display: inline-block;width:100px;">
+              <div style="width: 100px;height:100px;line-height: 100px;">
+                <Icon type="ios-camera" size="40"></Icon>
+              </div>
+            </Upload>
+            <Modal title="查看照片" v-model="dataReviseVisible">
+              <img :src='dataReviseImgUrl' style="width: 100%">
+              <div slot="footer"></div>
+            </Modal>
+          </div>
         </div>
         <Form :model="dataReviseData" ref="dataReviseForm" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="活动名称" prop="name">
+          <FormItem label="活动名称：" prop="name">
             <Input type="text" v-model="dataReviseData.name"></Input>
           </FormItem>
-          <FormItem label="活动费用">
-            <Input type="text" v-model="dataReviseData.price" @on-change="reFeeChange" @on-blur="reFeeBluer" style="width: 80%;"></Input><Checkbox v-model="isReviseOpen" @on-change="reFreeChange" class="ml15">免费</Checkbox>
+          <FormItem label="活动费用：">
+            <InputNumber v-model="dataReviseData.price" :max="10000000" :min="0" @on-change="reFeeChange" @on-blur="reFeeBluer" style="width: 80%;"></InputNumber><Checkbox v-model="isReviseOpen" @on-change="reFreeChange" class="ml15">免费</Checkbox>
           </FormItem>
-          <FormItem label="开始时间" prop="activityStart">
-            <DatePicker type="datetime" format="yyyy-MM-dd HH:mm" v-model="dataReviseData.activityStart" @on-change="dataReBeg" style="width: 100%;"></DatePicker>
+          <FormItem label="开始时间：">
+            <Row>
+              <Col span="10">
+                <FormItem prop="activityStart">
+                  <DatePicker type="date" format="yyyy-MM-dd" v-model="dataReviseData.activityStart"  @on-change="dataReBeg" style="width: 150px;"></DatePicker>
+                </FormItem>
+              </Col>
+              <Col span="10">
+                <FormItem prop="activityClockStart">
+                  <TimePicker type="time" format="HH:mm" v-model="dataReviseData.activityStartHms"  @on-change="clockReBeg" style="width: 150px;"></TimePicker>
+                </FormItem>
+              </Col>
+            </Row>
           </FormItem>
-          <FormItem label="结束时间" prop="activityEnd">
-            <DatePicker type="datetime" format="yyyy-MM-dd HH:mm" v-model="dataReviseData.activityEnd" @on-change="dataReEnd" style="width: 100%;"></DatePicker>
+          <FormItem label="结束时间：">
+            <Row>
+              <Col span="10">
+                <FormItem prop="activityEnd">
+                  <DatePicker type="date" format="yyyy-MM-dd" v-model="dataReviseData.activityEnd" @on-change="dataReEnd" :options="reviseOption" style="width: 150px;"></DatePicker>
+                </FormItem>
+              </Col>
+              <Col span="10">
+                <FormItem prop="activityClockEnd">
+                  <TimePicker type="time" format="HH:mm" v-model="dataReviseData.activityEndHms" @on-change="clockReEnd" :options="reviseOption" style="width: 150px;"></TimePicker>
+                </FormItem>
+              </Col>
+            </Row>
           </FormItem>
-          <FormItem label="活动地址" prop="address">
-            <Input type="text" v-model="dataReviseData.address"></Input>
+          <FormItem label="活动地址："  prop="address">
+            <Input type="text" :maxlength="80" v-model="dataReviseData.address"></Input>
           </FormItem>
-          <FormItem label="允许人数" prop="num">
-            <Input type="text" v-model="dataReviseData.num"></Input>
+          <FormItem label="允许人数：" prop="num">
+            <InputNumber v-model="dataReviseData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
-          <FormItem label="参与方式" prop="participate">
-            <Input type="text" v-model="dataReviseData.participate"></Input>
+          <FormItem label="参与方式：" prop="participate">
+            <Input type="text" :maxlength="50" v-model="dataReviseData.participate"></Input>
           </FormItem>
-          <FormItem label="活动介绍" prop="description">
-            <Input type="textarea" v-model="dataReviseData.description"></Input>
+          <FormItem label="活动介绍：" prop="description">
+            <Input type="textarea" :maxlength="1000" v-model="dataReviseData.description"></Input>
           </FormItem>
-          <FormItem label="活动安排" prop="arrangement">
-            <Input type="textarea" v-model="dataReviseData.arrangement"></Input>
+          <FormItem label="活动安排：" prop="arrangement">
+            <Input type="textarea" :maxlength="1000" v-model="dataReviseData.arrangement"></Input>
           </FormItem>
           <FormItem style="width: 200px!important;">
             <Button type="primary" @click="dataReviseClick" :loading="dataReviseLoading">确认修改</Button>
@@ -270,6 +324,7 @@
       v-model="dataSuccess"
     >
       <p ref="addTip"></p>
+      <div slot="close"></div>
       <div slot="footer">
         <Button type="warning"  @click="goDataList">返回列表</Button>
         <Button type="info"  @click="addDataMore">继续添加</Button>
@@ -284,6 +339,77 @@
   export default {
     name: "dataPageSystem",
     data () {
+      //自定义验证
+      const validateName = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动名称'));
+        } else {
+          callback();
+        }
+      };
+      const validateActivityStart = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写开始日期'));
+        } else {
+          callback();
+        }
+      };
+      const validateActivityClockStart = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写开始时间'));
+        } else {
+          callback();
+        }
+      };
+      const validateActivityEnd = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写结束日期'));
+        } else {
+          callback();
+        }
+      };
+      const validateActivityClockEnd = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写结束时间'));
+        } else {
+          callback();
+        }
+      };
+      const validateAddress = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动地址'));
+        } else {
+          callback();
+        }
+      };
+      const validateNum = (rule,value,callback) => {
+        if (value === null) {
+          callback(new Error('请填写允许人数'));
+        } else {
+          callback();
+        }
+      };
+      const validateParticipate = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写参与方式'));
+        } else {
+          callback();
+        }
+      };
+      const validateDescription = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动介绍'));
+        } else {
+          callback();
+        }
+      };
+      const validateArrangement = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写活动安排'));
+        } else {
+          callback();
+        }
+      };
       return {
         uploadUrl:base.baseUrl + 'column_activity/saveFile',
         value3:false,
@@ -299,6 +425,30 @@
           paddingBottom: '53px',
           position: 'static'
         },
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.dataCheckedPra.createTimeEnd);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.dataCheckedPra.createTimeStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
+        addOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.dataFormData.activityStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
+        reviseOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.dataReviseData.activityStart);
+            return date && date.valueOf() < d - 24*60*60*1000
+          }
+        },
         //列表查询参数
         dataCheckedPra:{
           createTimeStart:'',
@@ -309,6 +459,10 @@
           pageSize:10
         },
         dataList:[
+          {
+            value:'3',
+            label:'全部'
+          },
           {
             value:'0',
             label:'正常'
@@ -494,19 +648,20 @@
         visible:false,
         isFree:false,
         isOpen:true,
-        addPath:'',
         dataFormData:{
           creatorId:'123456',
           name:'',
           activityStart:'',
+          activityStartHms:'',
           activityEnd:'',
+          activityEndHms:'',
           address:'',
-          price:'0',
-          num:'',
+          price:0,
+          num:null,
           participate:'',
           description:'',
           arrangement:'',
-          filePath:''
+          filePath:[]
         },
         //详情data
         dataDetailData:{
@@ -527,49 +682,57 @@
         dataReviseDefault:[],
         dataUploadReviseList:[],
         dataReviseImgUrl:'',
-        dataRevisePath:'',
         isReviseOpen:true,
         dataReviseId:'',
         dataReviseData:{
           creatorId:'123456',
           name:'',
           activityStart:'',
+          activityStartHms:'',
           activityEnd:'',
+          activityEndHms:'',
           address:'',
-          price:'0',
-          num:'',
+          price:0,
+          num:null,
           participate:'',
           description:'',
           arrangement:'',
-          filePath:'',
+          filePath:[],
+          delFilePath:[],
           id:''
         },
         //表单验证
         ruleValidate:{
           name:[
-            {required:true,message:'请填写线路名称'}
+            {validator:validateName}
           ],
           activityStart:[
-            {required:true,message:'请填写开始时间'}
+            {validator:validateActivityStart}
           ],
           activityEnd:[
-            {required:true,message:'请填写结束时间'}
+            {validator:validateActivityEnd}
           ],
           address:[
-            {required:true,message:'请填写活动地址'}
+            {validator:validateAddress}
           ],
           num:[
-            {required:true,message:'请填写允许人数'}
+            {validator:validateNum}
           ],
           participate: [
-            {required:true,message:'请填写参与方式'}
+            {validator:validateParticipate}
             ],
           description:[
-            {required:true,message:'请填写活动介绍'}
+            {validator:validateDescription}
           ],
           arrangement:[
-            {required:true,message:'请填写活动安排'}
+            {validator:validateArrangement}
           ],
+          activityClockStart:[
+            {validator:validateActivityClockStart}
+          ],
+          activityClockEnd:[
+            {validator:validateActivityClockEnd}
+          ]
         }
       }
     },
@@ -578,6 +741,10 @@
       this.uploadList = this.$refs.dataUpload.fileList;
     },
     methods:{
+      checkClickData:function () {
+        this.dataCheckedPra.pageNum = 1;
+        this.getDataList();
+      },
       getDataList:function () {
         this.loading = true;
         axios.BlindDateList(this.dataCheckedPra)
@@ -614,15 +781,51 @@
       exportData:function () {
         window.location.href = base.baseUrl + 'column_activity/exportActivityList?createTimeStart='+this.dataCheckedPra.createTimeStart+'&createTimeEnd='+this.dataCheckedPra.createTimeEnd+'&name='+this.dataCheckedPra.name+'&status='+this.dataCheckedPra.status;
       },
+      handleBeforeUploadRevise:function (file) {
+        const check = this.dataUploadReviseList.length < 9;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '最多上传9张图片！'
+          });
+          return check;
+        }
+      },
       //新增
+      handleBeforeUpload:function (file) {
+        const check = this.uploadList.length < 9;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '最多上传9张图片！'
+          });
+          return check;
+        }
+      },
       handleSuccess:function (res,file,fileList) {
         //console.log(JSON.stringify(file));
-        file.url = res.result[0].filePath;
-        this.addPath += res.result[0].filePath + ',';
+        if (res.code === 200) {
+          file.url = res.result[0].filePath;
+        } else {
+          this.dataTip = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
       },
       handleFormatError:function () {
         this.dataTip = true;
-        this.$refs.failTip.innerHTML = '请选择格式为“jpg，jpeg，png”格式的图片！'
+        this.$refs.failTip.innerHTML = '请选择格式为“jpg，jpeg，png，bmp”格式的图片！'
       },
       handleView:function (url) {
         this.dataImgUrl = url;
@@ -643,30 +846,40 @@
       dataBeginTime:function (date) {
         this.dataFormData.activityStart = date;
       },
+      dataBeginClock:function (time) {
+        this.dataFormData.activityStartHms = time;
+      },
       dataEndTime:function (date) {
         this.dataFormData.activityEnd = date;
       },
+      dataEndClock:function (time) {
+        this.dataFormData.activitEndHms = time;
+      },
       dataSubClick:function () {
-        this.dataSubLoading = true;
-        this.dataFormData.filePath = this.addPath.substr(0,this.addPath.length-1);
         this.$refs.dataForm.validate(valid => {
           if (valid) {
+            this.uploadList.forEach(item => {
+              this.dataFormData.filePath.push(item.url);
+            });
+            this.dataSubLoading = true;
             axios.BlindDateAdd(this.dataFormData)
               .then(res => {
                 //console.log(res);
                 this.dataSubLoading = false;
                 if (res.code === 200) {
-                  this.addPath = '';
+                  this.dataFormData.filePath = [];
                   this.dataSuccess = true;
                   this.$refs.addTip.innerHTML = res.message;
                   this.getDataList();
                 } else {
                   this.dataTip = true;
+                  this.dataFormData.filePath = [];
                   this.$refs.failTip.innerHTML = res.message;
                 }
               })
               .catch(error => {
                 console.log(error);
+                this.dataFormData.filePath = [];
                 this.dataSubLoading = false;
                 this.dataTip = true;
                 this.$refs.failTip.innerHTML = '上传出错！'
@@ -675,18 +888,18 @@
         });
       },
       feeChanged:function () {
-        this.isOpen = this.dataFormData.price == '0';
+        this.isOpen = this.dataFormData.price == null;
       },
       freeChange:function (res) {
         if (res) {
           this.dataFormData.price = 0;
         } else {
-          this.dataFormData.price = ''
+          this.dataFormData.price = null
         }
       },
       feeBlur:function () {
-        if (this.dataFormData.price == '') {
-          this.dataFormData.price = '0';
+        if (this.dataFormData.price == null) {
+          this.dataFormData.price = 0;
           this.isOpen = true;
         }
       },
@@ -694,11 +907,11 @@
       getDataActivityDetaik:function (id) {
         axios.BlindDateDetail({id:id})
           .then(res => {
-            //console.log(res);
+            console.log(res);
             if (res.code === 200) {
-              if (res.result.filePath != null && res.result.filePath !== ""){
+              if (res.result.filePaths != null && res.result.filePaths !== ""){
                 this.dataDetailData.isPhoto = true;
-                this.dataDetailData.dataDetailUploadList = res.result.filePath.split(',');
+                this.dataDetailData.dataDetailUploadList = res.result.filePaths.split(',');
               } else {
                 this.dataDetailData.dataDetailUploadList = [];
                 this.dataDetailData.isPhoto = false;
@@ -728,30 +941,32 @@
       getReviseMessage:function (id) {
         axios.BlindDateDetail({id:id})
           .then(res => {
+            //console.log(res);
             if (res.code === 200) {
-              if (res.result.filePath != null && res.result.filePath !== "") {
-                this.dataRevisePath = res.result.filePath + ',';
-                let arr = res.result.filePath.split(',');
+              if (res.result.filePaths != null && res.result.filePaths !== "") {
+                let arr = res.result.filePaths.split(',');
                 arr.forEach((item,index) => {
                   this.dataReviseDefault.push({url:item,name:index});
                 });
               } else {
-                this.dataRevisePath = '';
                 this.dataReviseDefault = [];
               }
               this.$refs.dataReviseUpload.fileList = this.dataReviseDefault;
               this.dataUploadReviseList = this.$refs.dataReviseUpload.fileList;
               this.dataReviseData.name = res.result.name;
               this.dataReviseData.price = res.result.price;
-              this.dataReviseData.activityStart = res.result.activityStart;
-              this.dataReviseData.activityEnd = res.result.activityEnd;
+              this.dataReviseData.activityStart = res.result.activityStart.split(' ')[0];
+              //activityStartHms activityEndHms
+              this.dataReviseData.activityStartHms = res.result.activityStart.split(' ')[1];
+              this.dataReviseData.activityEnd = res.result.activityEnd.split(' ')[0];
+              this.dataReviseData.activityEndHms = res.result.activityEnd.split(' ')[1];
               this.dataReviseData.address = res.result.address;
               this.dataReviseData.num = res.result.num;
               this.dataReviseData.participate = res.result.participate;
               this.dataReviseData.description = res.result.description;
               this.dataReviseData.arrangement = res.result.arrangement;
               this.dataReviseId = id;
-              this.isReviseOpen = res.result.price == '0';
+              this.isReviseOpen = res.result.price === 0;
               this.dataReviseValue = true;
             } else {
               this.dataTip = true;
@@ -769,49 +984,53 @@
         this.dataReviseVisible = true;
       },
       dataReviseRemove:function (file) {
-        axios.BlindDataDeletePhoto({fileUrl:file.url})
-          .then(res => {
-            const fileList = this.$refs.dataReviseUpload.fileList;
-            this.$refs.dataReviseUpload.fileList.splice(fileList.indexOf(file), 1);
-            this.dataUploadReviseList = this.$refs.dataReviseUpload.fileList;
-          })
-          .catch(error => {
-            console.log(error);
-            this.dataTip = true;
-            this.$refs.failTip.innerHTML = '删除出错！'
-          })
+        const fileList = this.$refs.dataReviseUpload.fileList;
+        this.$refs.dataReviseUpload.fileList.splice(fileList.indexOf(file), 1);
+        this.dataUploadReviseList = this.$refs.dataReviseUpload.fileList;
+        this.dataReviseData.delFilePath.push(file.url);
       },
       handleReviseSuccess:function (res,file,fileList) {
-        file.url = res.result[0].filePath;
-        this.dataUploadReviseList = fileList;
-        this.dataRevisePath += res.result[0].filePath + ',';
+        if (res.code === 200) {
+          file.url = res.result[0].filePath;
+          this.dataUploadReviseList = fileList;
+        } else {
+          this.dataTip = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
       },
       dataReviseClick:function () {
         this.dataReviseData.id = this.dataReviseId;
-        this.dataReviseData.filePath = this.dataRevisePath.substr(0,this.dataRevisePath.length-1);
-        this.dataReviseData.activityStart = this.$trans.timeTranslateColock(this.dataReviseData.activityStart);
-        this.dataReviseData.activityEnd = this.$trans.timeTranslateColock(this.dataReviseData.activityEnd);
+        this.dataReviseData.activityStart = this.$trans.timeTranslate(this.dataReviseData.activityStart);
+        this.dataReviseData.activityEnd = this.$trans.timeTranslate(this.dataReviseData.activityEnd);
         this.$refs.dataReviseForm.validate(valid => {
           if (valid) {
+            this.dataUploadReviseList.forEach(item => {
+              this.dataReviseData.filePath .push(item.url);
+            });
             this.dataReviseLoading = true;
             axios.BlindDateRevise(this.dataReviseData)
               .then(res => {
                 this.dataReviseLoading = false;
                 if (res.code === 200) {
                   //新增成功之后把pathStr清空
-                  this.dataRevisePath = '';
+                  this.dataReviseData.filePath = [];
+                  this.dataReviseData.delFilePath = [];
                   this.dataReviseValue = false;
                   this.clearDataRevise();
                   this.dataTip = true;
                   this.$refs.failTip.innerHTML = '修改成功';
                   this.getDataList();
                 } else {
+                  this.dataReviseData.filePath = [];
+                  this.dataReviseData.delFilePath = [];
                   this.dataTip = true;
                   this.$refs.failTip.innerHTML = res.message;
                 }
               })
               .catch(error => {
                 console.log(error);
+                this.dataReviseData.filePath = [];
+                this.dataReviseData.delFilePath = [];
                 this.dataReviseLoading = false;
                 this.dataTip = true;
                 this.$refs.failTip.innerHTML = '修改出错！'
@@ -822,22 +1041,28 @@
       dataReBeg:function (date) {
         this.dataReviseData.activityStart = date;
       },
+      clockReBeg:function (time) {
+        this.dataReviseData.activityStartHms = time;
+      },
       dataReEnd:function (date) {
         this.dataReviseData.activityEnd = date;
       },
+      clockReEnd:function (time) {
+        this.dataReviseData.activityEndHms = time;
+      },
       reFreeChange:function (res) {
         if (res) {
-          this.dataReviseData.price = '0';
+          this.dataReviseData.price = 0;
         } else {
-          this.dataReviseData.price = '';
+          this.dataReviseData.price = null;
         }
       },
       reFeeChange:function () {
-        this.isReviseOpen = this.dataReviseData.price == '0';
+        this.isReviseOpen = this.dataReviseData.price == null;
       },
       reFeeBluer:function () {
-        if (this.dataReviseData.price == '') {
-          this.dataReviseData.price = '0';
+        if (this.dataReviseData.price == null) {
+          this.dataReviseData.price = 0;
           this.isReviseOpen = true;
         }
       },
@@ -856,10 +1081,11 @@
       },
       //重置表单
       clearDataDa:function () {
+        this.dataFormData.filePath = [];
         this.$refs.dataUpload.clearFiles();
         this.uploadList = this.$refs.dataUpload.fileList;
         this.$refs.dataForm.resetFields();
-        this.dataFormData.price = '0';
+        this.dataFormData.price = null;
         this.isOpen = true;
       },
       clearDataDetail:function () {
@@ -880,12 +1106,13 @@
         this.dataUploadReviseList = this.$refs.dataReviseUpload.fileList;
         //清空表单
         this.$refs.dataReviseForm.resetFields();
-        this.dataReviseData.price = '0';
+        this.dataReviseData.price = null;
         this.isReviseOpen = true;
         this.dataReviseDefault = [];
         this.dataReviseImgUrl = '';
         this.dataReviseId = '';
-        this.dataRevisePath = '';
+        this.dataReviseData.filePath = [];
+        this.dataReviseData.delFilePath = [];
       }
     }
   }
@@ -921,16 +1148,23 @@
       cursor: pointer;
     }
   }
-  .add-image{
+  .divs{
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     .p{
       width: 100px;
-      height: 80px;
-      line-height: 80px;
+      height: 90px;
+      line-height: 90px;
       text-align: right;
       padding: 10px 12px 10px 0;
+    }
+    .add-image{
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      width: 550px;
     }
   }
   .add-detail{

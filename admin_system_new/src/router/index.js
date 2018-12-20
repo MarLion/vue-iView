@@ -18,6 +18,14 @@ route.push({
     }
   },
   {
+    path:'/superAdmin',
+    name:'superAdmin',
+    component: resolve => require(['../components/superAdmin/superAdmin.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
     path:'/userMessage',
     name:'userMessage',
     component: resolve => require(['../components/userPages/userMessage.vue'], resolve),
@@ -34,9 +42,25 @@ route.push({
     }
   },
   {
+    path:'/communityUserList',
+    name:'communityUserList',
+    component: resolve => require(['../components/friendSysrem/communityUserList.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
     path:'/activitySystem',
     name:'activitySystem',
     component: resolve => require(['../components/friendSysrem/activitySystem.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/activityUserList',
+    name:'activityUserList',
+    component: resolve => require(['../components/friendSysrem/activityUserList.vue'], resolve),
     meta:{
       requireAuth:true
     }

@@ -55,6 +55,49 @@ export default {
   Login(params){
     return fetch('backend/user/login',params);
   },
+
+  //权限管理查找用户名单
+  AuthorityNameList(params){
+    return fetch('backend/user/selectUser',params);
+  },
+
+  //根据选择的角色查询原有权限
+  GetAreadyAuthority(params){
+    return fetch('backend/user/getPermissions',params);
+  },
+
+  //提交权限更改
+  SubmitAuthorityChange(params){
+    return fetch('backend/user/authorization',params);
+  },
+
+  //用户 订单总数
+  GetTotalNumber(params){
+    return fetch('user_data/selectSumByUserAndOrder',params)
+  },
+
+  //首页图表数据
+  GetChartsData(params){
+    return fetch('user_data/getDataStatistics',params);
+  },
+  /**
+   *圈子管理
+   * */
+  //查询圈子列表
+  GetCommunityList(params){
+    return fetch('community/communityList',params);
+  },
+
+  //圈子详情
+  CommunityDetail(params){
+    return fetch('community/communityInfo',params);
+  },
+
+  //解散圈子
+  CommunityDissolve(params){
+    return fetch('community/cancelCommunity',params)
+  },
+
   /**
    * 旅游路线
    * */

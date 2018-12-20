@@ -8,9 +8,9 @@
         </div>
         <div class="route-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseStartTime" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseStartTime" :options="begOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseEndTime"  style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseEndTime" :options="endOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">路线名称：</span>
           <span><Input v-model="routeNic" style="width: 200px;"/></span>
           <span class="ml15">状态类型：</span>
@@ -19,7 +19,7 @@
               <Option v-for="(item,index) in routeList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
-          <span class="ml10"><Button icon="ios-search" @click="getRouteList">查询</Button></span>
+          <span class="ml10"><Button icon="ios-search" @click="checkClick">查询</Button></span>
         </div>
       </div>
       <div class="route-list mt30">
@@ -42,46 +42,50 @@
           </span>
         </div>
         <div class="add-form mt30">
-          <div class="add-image">
-            <p class="p">上传照片</p>
-            <div class="demo-upload-list" v-for="item in uploadList">
-              <template v-if="item.status === 'finished'">
-                <img :src="item.url">
-                <div class="demo-upload-list-cover">
-                  <Icon type="ios-eye-outline" @click.native="handleView(item.url)"></Icon>
-                  <Icon type="ios-trash-outline" @click.native="handleRemove(item)"></Icon>
-                </div>
-              </template>
-              <template v-else>
-                <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
-              </template>
-            </div>
-            <Upload :action='uploadUrl'
-                    ref="upload"
-                    :show-upload-list="false"
-                    :on-success="handleSuccess"
-                    :format="['jpg','jpeg','png']"
-                    :on-format-error="handleFormatError"
-                    multiple
-                    type="drag"
-                    style="display: inline-block;width:100px;">
-              <div style="width: 100px;height:100px;line-height: 100px;">
-                <Icon type="ios-camera" size="40"></Icon>
+          <div class="divs">
+            <p class="p">上传照片：</p>
+            <div class="add-image">
+              <div class="demo-upload-list mt10" v-for="item in uploadList">
+                <template v-if="item.status === 'finished'">
+                  <img :src="item.url">
+                  <div class="demo-upload-list-cover">
+                    <Icon type="ios-eye-outline" @click.native="handleView(item.url)"></Icon>
+                    <Icon type="ios-trash-outline" @click.native="handleRemove(item)"></Icon>
+                  </div>
+                </template>
+                <template v-else>
+                  <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+                </template>
               </div>
-            </Upload>
-            <modal title="查看照片" v-model="visible">
-              <img :src= 'imgUrl' style="width: 100%">
-            </modal>
+              <Upload :action='uploadUrl'
+                      ref="upload"
+                      :show-upload-list="false"
+                      :on-success="handleSuccess"
+                      :format="['jpg','jpeg','png','bmp']"
+                      :on-format-error="handleFormatError"
+                      :before-upload="handleBeforeUpload"
+                      multiple
+                      type="drag"
+                      style="display: inline-block;width:100px;margin-top: 10px;">
+                <div style="width: 100px;height:100px;line-height: 100px;">
+                  <Icon type="ios-camera" size="40"></Icon>
+                </div>
+              </Upload>
+              <Modal title="查看照片" v-model="visible">
+                <img :src= 'imgUrl' style="width: 100%">
+                <div slot="footer"></div>
+              </Modal>
+            </div>
           </div>
           <Form :model="formData" ref="formData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-            <FormItem label="线路名称" prop="name">
+            <FormItem label="线路名称：" prop="name">
               <Input type="text" v-model="formData.name"></Input>
             </FormItem>
-            <FormItem label="行程时间">
+            <FormItem label="行程时间：" prop="date">
               <Row>
                 <Col span="10">
                   <FormItem prop="tourStart">
-                    <DatePicker type="date" format="yyyy-MM-dd" @on-change="formDataBegTime" v-model="formData.tourStart" style="width: 175px;"></DatePicker>
+                    <DatePicker type="date" format="yyyy-MM-dd" @on-change="formDataBegTime" v-model="formData.tourStart" :options="addEndOption" style="width: 175px;"></DatePicker>
                   </FormItem>
                 </Col>
                 <Col span="3" style="text-align: center;">
@@ -89,25 +93,25 @@
                 </Col>
                 <Col span="10">
                   <FormItem prop="tourEnd">
-                    <DatePicker type="date" format="yyyy-MM-dd" @on-change="formDataEndTime" v-model="formData.tourEnd" style="width: 175px;"></DatePicker>
+                    <DatePicker type="date" format="yyyy-MM-dd" @on-change="formDataEndTime" v-model="formData.tourEnd" :options="addOption" style="width: 175px;"></DatePicker>
                   </FormItem>
                 </Col>
               </Row>
             </FormItem>
-            <FormItem label="产品价格" prop="price">
-              <Input type="text" v-model="formData.price" style="width: 95%;"></Input>
+            <FormItem label="产品价格：" prop="price">
+              <InputNumber v-model="formData.price" :max="10000000" :min="0" style="width: 95%;"></InputNumber>
               <span>元</span>
             </FormItem>
-            <FormItem label="费用清单" prop="tourList">
+            <FormItem label="费用清单：" prop="tourList">
               <Input type="text" v-model="formData.tourList"></Input>
             </FormItem>
-            <FormItem label="允许人数" prop="num">
-              <Input type="text" v-model="formData.num"></Input>
+            <FormItem label="允许人数：" prop="num">
+              <InputNumber  v-model="formData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
             </FormItem>
-            <FormItem label="景区介绍" prop="description">
+            <FormItem label="景区介绍：" prop="description">
               <Input type="textarea" v-model="formData.description"></Input>
             </FormItem>
-            <FormItem label="行程安排" prop="tourArrangement">
+            <FormItem label="行程安排：" prop="tourArrangement">
               <Input type="textarea" v-model="formData.tourArrangement"></Input>
             </FormItem>
             <FormItem style="width: 200px!important;">
@@ -131,16 +135,18 @@
         </span>
       </div>
       <div class="add-form mt30">
-        <div class="add-image">
+        <div class="divs">
           <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
-          <template v-if="detailData.isPhoto">
-            <div class="demo-upload-list"  v-for="item in detailData.detailUploadList">
-              <img :src="item">
-            </div>
-          </template>
-          <template v-else>
-            <div class="demo-upload-list">暂无图片</div>
-          </template>
+          <div class="add-image">
+            <template v-if="detailData.isPhoto">
+              <div class="demo-upload-list"  v-for="item in detailData.detailUploadList">
+                <img :src="item">
+              </div>
+            </template>
+            <template v-else>
+              <div class="demo-upload-list">暂无图片</div>
+            </template>
+          </div>
         </div>
         <div class="add-detail">
           <p class="p">线路名称：</p>
@@ -189,47 +195,51 @@
           </span>
       </div>
       <div class="add-form mt30">
-        <div class="add-image">
-          <p class="p">上传照片</p>
-          <div class="demo-upload-list" v-for="item in reviseUploadList">
-            <template v-if="item.status === 'finished'">
-              <img :src="item.url">
-              <div class="demo-upload-list-cover">
-                <Icon type="ios-eye-outline" @click.native="handleReviseView(item.url)"></Icon>
-                <Icon type="ios-trash-outline" @click.native="handleReviseRemove(item)"></Icon>
-              </div>
-            </template>
-            <template v-else>
-              <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
-            </template>
-          </div>
-          <Upload :action='uploadUrl'
-                  ref="reviseUpload"
-                  :show-upload-list="false"
-                  :default-file-list="reviseDefaultList"
-                  :on-success="handleReviseSucess"
-                  :format="['jpg','jpeg','png']"
-                  :on-format-error="handleReviseFormatError"
-                  multiple
-                  type="drag"
-                  style="display: inline-block;width:100px;">
-            <div style="width: 100px;height:100px;line-height: 100px;">
-              <Icon type="ios-camera" size="40"></Icon>
+        <div class="divs">
+          <p class="p">上传照片：</p>
+          <div class="add-image">
+            <div class="demo-upload-list" v-for="item in reviseUploadList">
+              <template v-if="item.status === 'finished'">
+                <img :src="item.url">
+                <div class="demo-upload-list-cover">
+                  <Icon type="ios-eye-outline" @click.native="handleReviseView(item.url)"></Icon>
+                  <Icon type="ios-trash-outline" @click.native="handleReviseRemove(item)"></Icon>
+                </div>
+              </template>
+              <template v-else>
+                <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+              </template>
             </div>
-          </Upload>
-          <modal title="查看照片" v-model="reviseVisible">
-            <img :src= 'reviseImgUrl' style="width: 100%">
-          </modal>
+            <Upload :action='uploadUrl'
+                    ref="reviseUpload"
+                    :show-upload-list="false"
+                    :default-file-list="reviseDefaultList"
+                    :on-success="handleReviseSucess"
+                    :format="['jpg','jpeg','png','bmp']"
+                    :on-format-error="handleReviseFormatError"
+                    :before-upload="handleBeforeUploadRevise"
+                    multiple
+                    type="drag"
+                    style="display: inline-block;width:100px;">
+              <div style="width: 100px;height:100px;line-height: 100px;">
+                <Icon type="ios-camera" size="40"></Icon>
+              </div>
+            </Upload>
+            <Modal title="查看照片" v-model="reviseVisible">
+              <img :src= 'reviseImgUrl' style="width: 100%">
+              <div slot="footer"></div>
+            </Modal>
+          </div>
         </div>
         <Form :model="reviseData" ref="reviseData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="线路名称" prop="name">
+          <FormItem label="线路名称：" prop="name">
             <Input type="text" v-model="reviseData.name"></Input>
           </FormItem>
-          <FormItem label="行程时间">
+          <FormItem label="行程时间：">
             <Row>
               <Col span="10">
                 <FormItem prop="tourStart">
-                  <DatePicker type="date" format="yyyy-MM-dd" v-model="reviseData.tourStart" @on-change="reviseDataStart" style="width: 175px;"></DatePicker>
+                  <DatePicker type="date" format="yyyy-MM-dd" v-model="reviseData.tourStart" @on-change="reviseDataStart" :options="reviseEndOption" style="width: 175px;"></DatePicker>
                 </FormItem>
               </Col>
               <Col span="3" style="text-align: center;">
@@ -237,25 +247,25 @@
               </Col>
               <Col span="10">
                 <FormItem prop="tourEnd">
-                  <DatePicker type="date" format="yyyy-MM-dd" v-model="reviseData.tourEnd" @on-change="reviseDataEnd" style="width: 175px;"></DatePicker>
+                  <DatePicker type="date" format="yyyy-MM-dd" v-model="reviseData.tourEnd" @on-change="reviseDataEnd" :options="reviseOption" style="width: 175px;"></DatePicker>
                 </FormItem>
               </Col>
             </Row>
           </FormItem>
-          <FormItem label="产品价格" prop="price">
-            <Input type="text" v-model="reviseData.price" style="width: 95%;"></Input>
+          <FormItem label="产品价格：" prop="price">
+            <InputNumber v-model="reviseData.price" :max="10000000" :min="0" style="width: 95%;"></InputNumber>
             <span>元</span>
           </FormItem>
-          <FormItem label="费用清单" prop="tourList">
+          <FormItem label="费用清单：" prop="tourList">
             <Input type="text" v-model="reviseData.tourList"></Input>
           </FormItem>
-          <FormItem label="允许人数" prop="num">
-            <Input type="text" v-model="reviseData.num"></Input>
+          <FormItem label="允许人数：" prop="num">
+            <InputNumber v-model="reviseData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
-          <FormItem label="景区介绍" prop="description">
+          <FormItem label="景区介绍：" prop="description">
             <Input type="textarea" v-model="reviseData.description"></Input>
           </FormItem>
-          <FormItem label="行程安排" prop="tourArrangement">
+          <FormItem label="行程安排：" prop="tourArrangement">
             <Input type="textarea" v-model="reviseData.tourArrangement"></Input>
           </FormItem>
           <FormItem style="width: 200px!important;">
@@ -278,6 +288,7 @@
       v-model="addSuccess"
     >
       <p ref="addTip"></p>
+      <div slot="close"></div>
       <div slot="footer">
         <Button type="warning"  @click="goList">返回列表</Button>
         <Button type="info"  @click="addMore">继续添加</Button>
@@ -293,11 +304,102 @@
   export default {
     name: "tourRouteSystem",
     data () {
+      //自定义验证
+      const validateName = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写线路名称'))
+        } else {
+          callback();
+        }
+      };
+      const validateTourStart = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写起始时间'))
+        } else {
+          callback();
+        }
+      };
+      const validateEourEnd = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写结束时间'))
+        } else {
+          callback();
+        }
+      };
+      const validatePrice = (rule,value,callback) => {
+        if (value === null) {
+          callback(new Error('请填写产品价格'))
+        } else {
+          callback();
+        }
+      };
+      const validateTourList = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写费用清单'))
+        } else {
+          callback();
+        }
+      };
+      const validateNum = (rule,value,callback) => {
+        if (value === null) {
+          callback(new Error('请填写允许人数'))
+        } else {
+          callback();
+        }
+      };
+      const validateDescript = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写景区介绍'))
+        } else {
+          callback();
+        }
+      };
+      const validateArragne = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写行程安排'))
+        } else {
+          callback();
+        }
+      };
       return {
         uploadUrl:base.baseUrl + 'column_tour/saveFile',
         value3:false,
         value4:false,
         value5:false,
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.endTime);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.startTime);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
+        addOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.formData.tourStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
+        addEndOption:{
+          disabledDate : date =>  {
+            return date && date.valueOf() < Date.now() - 24*60*60*1000;
+          }
+        },
+        reviseOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.reviseData.tourStart);
+            return date && date.valueOf() < d;
+          }
+        },
+        reviseEndOption:{
+          disabledDate : date =>  {
+            return date && date.valueOf() < Date.now() - 24*60*60*1000;
+          }
+        },
         styles: {
           height: 'calc(100% - 55px)',
           overflow: 'auto',
@@ -305,6 +407,10 @@
           position: 'static'
         },
         routeList:[
+          {
+            value:'3',
+            label:'全部'
+          },
           {
             value:'0',
             label:'正常'
@@ -390,9 +496,9 @@
                           .then(res => {
                             //console.log(res);
                             if (res.code === 200) {
-                              if (res.result.filePath != null && res.result.filePath !== "" ) {
+                              if (res.result.filePaths != null && res.result.filePaths !== "" ) {
                                 this.detailData.isPhoto = true;
-                                this.detailData.detailUploadList = res.result.filePath.split(',');
+                                this.detailData.detailUploadList = res.result.filePaths.split(',');
                               } else {
                                 this.detailData.detailUploadList = [];
                                 this.detailData.isPhoto = false;
@@ -433,14 +539,12 @@
                           .then(res => {
                             //console.log(res);
                             if (res.code === 200) {
-                              if (res.result.filePath != null && res.result.filePath !== "" ) {
-                                this.revisePath =  res.result.filePath+',';
-                                let arr = res.result.filePath.split(',');
+                              if (res.result.filePaths != null && res.result.filePaths !== "" ) {
+                                let arr = res.result.filePaths.split(',');
                                 arr.forEach((item,index) => {
                                   this.reviseDefaultList.push({url:item,name:index});
                                 });
                               } else {
-                                this.revisePath = '';
                                 this.reviseDefaultList = [];
                               }
                               //console.log(this.$refs.reviseUpload.fileList);
@@ -558,40 +662,39 @@
           name:'',
           tourStart:'',
           tourEnd:'',
-          price:'',
+          price:null,
           tourList:'',
-          num:'',
+          num:null,
           description:'',
           tourArrangement:'',
-          filePath:''
+          filePath:[]
         },
         ruleValidate:{
           name:[
-            {required:true,message:'请填写线路名称'}
+            {validator:validateName}
           ],
           tourStart:[
-            {required:true,message:'请填写起始时间'}
+            {validator:validateTourStart}
           ],
           tourEnd:[
-            {required:true,message:'请填写结束时间'}
+            {validator:validateEourEnd}
           ],
           price:[
-            {required:true,message:'请填写产品价格'}
+            {validator:validatePrice}
           ],
           tourList:[
-            {required:true,message:'请填写费用清单'}
+            {validator:validateTourList}
           ],
           num:[
-            {required:true,message:'请填写允许人数'}
+            {validator:validateNum}
           ],
           description:[
-            {required:true,message:'请填写景区介绍'}
+            {validator:validateDescript}
           ],
           tourArrangement:[
-            {required:true,message:'请填写行程安排'}
+            {validator:validateArragne}
           ]
         },
-        pathStr:'',
         loginFail:false,
         addSuccess:false,
         adding:false,
@@ -609,7 +712,6 @@
           tourArrangement:'',
         },
         //修改
-        revisePath:'',
         reviseVisible:false,
         reviseDefaultList:[],
         reviseUploadList:[],
@@ -620,12 +722,13 @@
           name:'',
           tourStart:'',
           tourEnd:'',
-          price:'',
+          price:null,
           tourList:'',
-          num:'',
+          num:null,
           description:'',
           tourArrangement:'',
-          filePath:''
+          filePath:[],
+          delFilePath:[]
         },
         reviseAdding:false,
       }
@@ -635,6 +738,10 @@
      this.uploadList = this.$refs.upload.fileList;
     },
     methods:{
+      checkClick:function () {
+        this.page = 1;
+        this.getRouteList();
+      },
       //获取路线列表
       getRouteList:function () {
         this.loading = true;
@@ -682,15 +789,52 @@
       chooseEndTime:function (date) {
         this.endTime = date;
       },
+      handleBeforeUploadRevise:function (file) {
+        const check = this.reviseUploadList.length < 9;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '最多上传9张图片！'
+          });
+          return check;
+        }
+      },
       //上传照片方法
+      handleBeforeUpload:function (file) {
+        //console.log(file);
+        const check = this.uploadList.length < 9;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '最多上传9张图片！'
+          });
+          return check;
+        }
+      },
       handleSuccess:function (res,file,filelist) {
-        // console.log(JSON.stringify(file));
-        file.url = res.result[0].filePath;
-        this.pathStr += res.result[0].filePath + ',';
+        //console.log(file);
+        if (res.code === 200) {
+          file.url = res.result[0].filePath;
+        } else {
+          this.loginFail = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
       },
       handleFormatError:function () {
         this.loginFail = true;
-        this.$refs.failTip.innerHTML = '请选择格式为“jpg，jpeg，png”格式的图片！'
+        this.$refs.failTip.innerHTML = '请选择格式为“jpg，jpeg，png，bmp”格式的图片！'
       },
       handleView:function (url) {
         this.visible = true;
@@ -717,28 +861,33 @@
       },
       subClick:function () {
         let _that = this;
-        this.formData.filePath = this.pathStr.substr(0,this.pathStr.length-1);
-        //console.log(_that.formData);
         this.$refs.formData.validate((valid) => {
           if (valid) {
+            this.uploadList.forEach(item => {
+              this.formData.filePath.push(item.url);
+            });
+            //console.log(this.formData.filePath);
+            //console.log(JSON.stringify(this.formData));
             _that.adding = true;
-            axios.TourAddRoute(_that.formData)
+            axios.TourAddRoute(this.formData)
               .then(res => {
                 //console.log(res);
                 _that.adding= false;
                 if (res.code === 200) {
-                  //新增成功之后把pathStr清空
-                  this.pathStr = '';
+                  //新增成功之后把filePath清空
+                  this.formData.filePath = [];
                   this.addSuccess = true;
                   this.$refs.addTip.innerHTML = res.message;
                   this.getRouteList();
                 } else {
+                  this.formData.filePath = [];
                   this.loginFail = true;
                   this.$refs.failTip.innerHTML = res.message;
                 }
               })
               .catch(error => {
                 console.log(error);
+                this.formData.filePath = [];
                 _that.adding= false;
                 this.loginFail = true;
                 this.$refs.failTip.innerHTML = '上传出错！'
@@ -763,6 +912,7 @@
         //重置图片
         this.$refs.upload.clearFiles();
         this.uploadList = this.$refs.upload.fileList;
+        this.formData.filePath = [];
         //重置表单
         this.$refs.formData.resetFields();
       },
@@ -781,32 +931,29 @@
       },
       //修改路线
       handleReviseSucess:function (res,file,filelist) {
-        file.url = res.result[0].filePath;
-        this.reviseUploadList = filelist;
-        this.revisePath += res.result[0].filePath + ',';
+        if (res.code === 200) {
+          file.url = res.result[0].filePath;
+          this.reviseUploadList = filelist;
+        } else {
+          this.loginFail = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
         //console.log(this.$refs.reviseUpload.fileList);
       },
       handleReviseFormatError:function () {
         this.loginFail = true;
-        this.$refs.failTip.innerHTML = '请选择格式为“jpg，jpeg，png”格式的图片！'
+        this.$refs.failTip.innerHTML = '请选择格式为“jpg，jpeg，png，bmp”格式的图片！'
       },
       handleReviseView:function (url) {
         this.reviseVisible = true;
         this.reviseImgUrl = url;
       },
       handleReviseRemove:function (file) {
-        axios.TourDeletePhoto({fileUrl:file.url})
-          .then(res => {
-            //成功之后从列表删除
-            const fileList = this.$refs.reviseUpload.fileList;
-            this.$refs.reviseUpload.fileList.splice(fileList.indexOf(file), 1);
-            this.reviseUploadList = this.$refs.reviseUpload.fileList;
-          })
-          .catch(error => {
-            console.log(error);
-            this.loginFail = true;
-            this.$refs.failTip.innerHTML = '删除出错！'
-          })
+        const fileList = this.$refs.reviseUpload.fileList;
+        this.$refs.reviseUpload.fileList.splice(fileList.indexOf(file), 1);
+        this.reviseUploadList = this.$refs.reviseUpload.fileList;
+        //将删除的图片路径push进数组保存
+        this.reviseData.delFilePath.push(file.url);
       },
       reviseDataStart:function (date) {
         this.reviseData.tourStart = date;
@@ -816,12 +963,16 @@
       },
       reviseSub:function () {
         this.reviseData.id = this.reviseId;
-        this.reviseData.filePath = this.revisePath.substr(0,this.revisePath.length-1);
         this.reviseData.tourStart = this.$trans.timeTranslate(this.reviseData.tourStart);
         this.reviseData.tourEnd = this.$trans.timeTranslate(this.reviseData.tourEnd);
-        //console.log(this.reviseData);
         this.$refs.reviseData.validate((valid) => {
           if (valid) {
+            //如果放在验证之外 验证不过 点一次提交会push一次 如果验证过了 在提交之前push进数组
+            this.reviseUploadList.forEach( item => {
+              this.reviseData.filePath.push(item.url);
+            });
+            //console.log(this.reviseData.filePath);
+            //console.log(this.reviseData.delFilePath);
             this.reviseAdding = true;
             axios.TourAddRoute(this.reviseData)
               .then(res => {
@@ -829,19 +980,24 @@
                 this.reviseAdding= false;
                 if (res.code === 200) {
                   //新增成功之后把pathStr清空
-                  this.revisePath = '';
+                  this.reviseData.filePath = [];
+                  this.reviseData.delFilePath = [];
                   this.value5 = false;
                   this.clearRevise();
                   this.loginFail = true;
                   this.$refs.failTip.innerHTML = '修改成功';
                   this.getRouteList();
                 } else {
+                  this.reviseData.filePath = [];
+                  this.reviseData.delFilePath = [];
                   this.loginFail = true;
                   this.$refs.failTip.innerHTML = res.message;
                 }
               })
               .catch(error => {
                 console.log(error);
+                this.reviseData.filePath = [];
+                this.reviseData.delFilePath = [];
                 this.reviseAdding= false;
                 this.loginFail = true;
                 this.$refs.failTip.innerHTML = '上传出错！'
@@ -857,7 +1013,8 @@
         this.reviseUploadList = this.$refs.reviseUpload.fileList;
         //重置表单
         this.$refs.reviseData.resetFields();
-        this.revisePath = '';
+        this.reviseData.filePath = [];
+        this.reviseData.delFilePath = [];
         this.reviseDefaultList = [];
         this.reviseImgUrl = '';
         this.reviseId = '';
@@ -896,16 +1053,23 @@
       cursor: pointer;
     }
   }
-  .add-image{
+  .divs{
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     .p{
       width: 100px;
-      height: 80px;
-      line-height: 80px;
+      height: 90px;
+      line-height: 90px;
       text-align: right;
       padding: 10px 12px 10px 0;
+    }
+    .add-image{
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      width: 550px;
     }
   }
   .add-detail{

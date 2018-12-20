@@ -8,9 +8,9 @@
         </div>
         <div class="data-search">
           <span class="ml15">发布日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateBeg" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateBeg" :options="begOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">发布日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateEnd" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">活动名称：</span>
           <span><Input v-model="actCheckData.name" style="width: 200px;"/></span>
           <span class="ml15">状态类型：</span>
@@ -19,7 +19,7 @@
               <Option v-for="(item,index) in dataList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
-          <span class="ml10"><Button icon="ios-search" @click="getActList">查询</Button></span>
+          <span class="ml10"><Button icon="ios-search" @click="actListClick">查询</Button></span>
         </div>
       </div>
       <div class="data-list mt30">
@@ -42,54 +42,58 @@
         </span>
       </div>
       <div class="add-form mt30">
-        <div class="add-image">
-          <p class="p">上传照片</p>
-          <div class="demo-upload-list" v-for="item in uploadList">
-            <template v-if="item.status === 'finished'">
-              <img :src="item.url">
-              <div class="demo-upload-list-cover">
-                <Icon type="ios-eye-outline" @click.native="actHandleView(item.url)"></Icon>
-                <Icon type="ios-trash-outline" @click.native="actHandleRemove(item)"></Icon>
-              </div>
-            </template>
-            <template v-else>
-              <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
-            </template>
-          </div>
-          <Upload :action='uploadUrl'
-                  ref="actUpload"
-                  :show-upload-list="false"
-                  :on-success="handleSuccess"
-                  :format="['jpg','jpeg','png']"
-                  :on-format-error="handleFormatError"
-                  multiple
-                  type="drag"
-                  style="display: inline-block;width:100px;">
-            <div style="width: 100px;height:100px;line-height: 100px;">
-              <Icon type="ios-camera" size="40"></Icon>
+        <div class="divs">
+          <p class="p">上传照片：</p>
+          <div class="add-image">
+            <div class="demo-upload-list" v-for="item in uploadList">
+              <template v-if="item.status === 'finished'">
+                <img :src="item.url">
+                <div class="demo-upload-list-cover">
+                  <Icon type="ios-eye-outline" @click.native="actHandleView(item.url)"></Icon>
+                  <Icon type="ios-trash-outline" @click.native="actHandleRemove(item)"></Icon>
+                </div>
+              </template>
+              <template v-else>
+                <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+              </template>
             </div>
-          </Upload>
-          <modal title="查看照片" v-model="actVisible">
-            <img :src= 'imgUrl' style="width: 100%">
-          </modal>
+            <Upload :action='uploadUrl'
+                    ref="actUpload"
+                    :show-upload-list="false"
+                    :on-success="handleSuccess"
+                    :format="['jpg','jpeg','png','bmp']"
+                    :on-format-error="handleFormatError"
+                    :before-upload="handleBeforeUpload"
+                    multiple
+                    type="drag"
+                    style="display: inline-block;width:100px;">
+              <div style="width: 100px;height:100px;line-height: 100px;">
+                <Icon type="ios-camera" size="40"></Icon>
+              </div>
+            </Upload>
+            <Modal title="查看照片" v-model="actVisible">
+              <img :src= 'imgUrl' style="width: 100%">
+              <div slot="footer"></div>
+            </Modal>
+          </div>
         </div>
         <Form :model="actFormData" ref="actFormData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="节目名称" prop="name">
+          <FormItem label="节目名称：" prop="name">
             <Input type="text" v-model="actFormData.name"></Input>
           </FormItem>
-          <FormItem label="节目口号" prop="slogan">
+          <FormItem label="节目口号：" prop="slogan">
             <Input type="text" v-model="actFormData.slogan" style="width: 100%;"></Input>
           </FormItem>
-          <FormItem label="参与方式" prop="participate">
+          <FormItem label="参与方式：" prop="participate">
             <Input type="text" v-model="actFormData.participate"></Input>
           </FormItem>
-          <FormItem label="允许人数" prop="num">
-            <Input type="text" v-model="actFormData.num"></Input>
+          <FormItem label="允许人数：" prop="num">
+            <InputNumber v-model="actFormData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
-          <FormItem label="节目介绍" prop="description">
-            <Input type="textarea" v-model="actFormData.description"></Input>
+          <FormItem label="节目介绍：" prop="description">
+            <Input type="textarea" :maxlength="1000" v-model="actFormData.description"></Input>
           </FormItem>
-          <FormItem label="节目预告" prop="arrangement">
+          <FormItem label="节目预告：" :maxlength="1000" prop="arrangement">
             <Input type="textarea" v-model="actFormData.arrangement"></Input>
           </FormItem>
           <FormItem style="width: 200px!important;">
@@ -112,40 +116,44 @@
             <span class="add-tips"><Icon type="md-information-circle" />友情提示：湖北电视台工作人员使用，配置专用账户！</span>
           </span>
       </div>
-      <div class="add-image mt30">
-        <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
-        <template v-if="actDetailDate.isPhoto">
-          <div class="demo-upload-list"  v-for="item in actDetailDate.detailUploadList">
-            <img :src="item">
+      <div class="add-form mt30">
+        <div class="divs">
+          <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
+          <div class="add-image mt30">
+            <template v-if="actDetailDate.isPhoto">
+              <div class="demo-upload-list"  v-for="item in actDetailDate.detailUploadList">
+                <img :src="item">
+              </div>
+            </template>
+            <template v-else>
+              <div class="demo-upload-list">暂无图片</div>
+            </template>
           </div>
-        </template>
-        <template v-else>
-          <div class="demo-upload-list">暂无图片</div>
-        </template>
-      </div>
-      <div class="add-detail">
-        <p class="p">节目名称：</p>
-        <p class="detailSpan">{{actDetailDate.name}}</p>
-      </div>
-      <div class="add-detail">
-        <p class="p">节目口号：</p>
-        <p class="detailSpan">{{actDetailDate.slogan}}</p>
-      </div>
-      <div class="add-detail">
-        <p class="p">参与方式：</p>
-        <p class="detailSpan">{{actDetailDate.method}}</p>
-      </div>
-      <div class="add-detail">
-        <p class="p">允许人数：</p>
-        <p class="detailSpan">{{actDetailDate.num}}</p>
-      </div>
-      <div class="add-detail">
-        <p class="p">节目介绍：</p>
-        <p class="detailSpan detailWidth">{{actDetailDate.description}}</p>
-      </div>
-      <div class="add-detail">
-        <p class="p">节目预告：</p>
-        <p class="detailSpan detailWidth">{{actDetailDate.arrangement}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">节目名称：</p>
+          <p class="detailSpan">{{actDetailDate.name}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">节目口号：</p>
+          <p class="detailSpan">{{actDetailDate.slogan}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">参与方式：</p>
+          <p class="detailSpan">{{actDetailDate.method}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">允许人数：</p>
+          <p class="detailSpan">{{actDetailDate.num}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">节目介绍：</p>
+          <p class="detailSpan detailWidth">{{actDetailDate.description}}</p>
+        </div>
+        <div class="add-detail">
+          <p class="p">节目预告：</p>
+          <p class="detailSpan detailWidth">{{actDetailDate.arrangement}}</p>
+        </div>
       </div>
     </Drawer>
     <!--修改-->
@@ -163,55 +171,59 @@
         </span>
       </div>
       <div class="add-form mt30">
-        <div class="add-image">
-          <p class="p">上传照片</p>
-          <div class="demo-upload-list" v-for="item in actReviseUploadList">
-            <template v-if="item.status === 'finished'">
-              <img :src="item.url">
-              <div class="demo-upload-list-cover">
-                <Icon type="ios-eye-outline" @click.native="actReviseHandleView(item.url)"></Icon>
-                <Icon type="ios-trash-outline" @click.native="actReviseHandleRemove(item)"></Icon>
-              </div>
-            </template>
-            <template v-else>
-              <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
-            </template>
-          </div>
-          <Upload :action='uploadUrl'
-                  ref="actReviseUpload"
-                  :show-upload-list="false"
-                  :default-file-list="actReviseDefaultList"
-                  :on-success="actReviseHandleSuccess"
-                  :format="['jpg','jpeg','png']"
-                  :on-format-error="handleFormatError"
-                  multiple
-                  type="drag"
-                  style="display: inline-block;width:100px;">
-            <div style="width: 100px;height:100px;line-height: 100px;">
-              <Icon type="ios-camera" size="40"></Icon>
+        <div class="divs">
+          <p class="p">上传照片：</p>
+          <div class="add-image">
+            <div class="demo-upload-list" v-for="item in actReviseUploadList">
+              <template v-if="item.status === 'finished'">
+                <img :src="item.url">
+                <div class="demo-upload-list-cover">
+                  <Icon type="ios-eye-outline" @click.native="actReviseHandleView(item.url)"></Icon>
+                  <Icon type="ios-trash-outline" @click.native="actReviseHandleRemove(item)"></Icon>
+                </div>
+              </template>
+              <template v-else>
+                <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+              </template>
             </div>
-          </Upload>
-          <modal title="查看照片" v-model="actReviseVisible">
-            <img :src= 'actReviseImgUrl' style="width: 100%">
-          </modal>
+            <Upload :action='uploadUrl'
+                    ref="actReviseUpload"
+                    :show-upload-list="false"
+                    :default-file-list="actReviseDefaultList"
+                    :on-success="actReviseHandleSuccess"
+                    :format="['jpg','jpeg','png','bmp']"
+                    :on-format-error="handleFormatError"
+                    :before-upload="handleBeforeUploadRevise"
+                    multiple
+                    type="drag"
+                    style="display: inline-block;width:100px;">
+              <div style="width: 100px;height:100px;line-height: 100px;">
+                <Icon type="ios-camera" size="40"></Icon>
+              </div>
+            </Upload>
+            <Modal title="查看照片" v-model="actReviseVisible">
+              <img :src= 'actReviseImgUrl' style="width: 100%">
+              <div slot="footer"></div>
+            </Modal>
+          </div>
         </div>
         <Form :model="actReviseFormData" ref="actReviseFormData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="节目名称" prop="name">
+          <FormItem label="节目名称：" prop="name">
             <Input type="text" v-model="actReviseFormData.name"></Input>
           </FormItem>
-          <FormItem label="节目口号" prop="slogan">
+          <FormItem label="节目口号：" prop="slogan">
             <Input type="text" v-model="actReviseFormData.slogan" style="width: 100%;"></Input>
           </FormItem>
-          <FormItem label="参与方式" prop="participate">
+          <FormItem label="参与方式：" prop="participate">
             <Input type="text" v-model="actReviseFormData.participate"></Input>
           </FormItem>
-          <FormItem label="允许人数" prop="num">
-            <Input type="text" v-model="actReviseFormData.num"></Input>
+          <FormItem label="允许人数：" prop="num">
+            <InputNumber v-model="actReviseFormData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
-          <FormItem label="节目介绍" prop="description">
+          <FormItem label="节目介绍：" :maxlength="1000" prop="description">
             <Input type="textarea" v-model="actReviseFormData.description"></Input>
           </FormItem>
-          <FormItem label="节目预告" prop="arrangement">
+          <FormItem label="节目预告：" :maxlength="1000" prop="arrangement">
             <Input type="textarea" v-model="actReviseFormData.arrangement"></Input>
           </FormItem>
           <FormItem style="width: 200px!important;">
@@ -234,6 +246,7 @@
       v-model="actSuccess"
     >
       <p ref="actAddTip"></p>
+      <div slot="close"></div>
       <div slot="footer">
         <Button type="warning"  @click="goActList">返回列表</Button>
         <Button type="info"  @click="addActMore">继续添加</Button>
@@ -248,6 +261,49 @@
   export default {
     name: "act",
     data () {
+      //自定义验证
+      const validateName = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写节目名称'));
+        } else {
+          callback();
+        }
+      };
+      const validateSlogan = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写节目口号'));
+        } else {
+          callback();
+        }
+      };
+      const validateParticipate = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写参与方式'));
+        } else {
+          callback();
+        }
+      };
+      const validateNum = (rule,value,callback) => {
+        if (value === null) {
+          callback(new Error('请填写允许人数'));
+        } else {
+          callback();
+        }
+      };
+      const validateDescription = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写节目介绍'));
+        } else {
+          callback();
+        }
+      };
+      const validateArrangement = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写节目预告'));
+        } else {
+          callback();
+        }
+      };
       return {
         uploadUrl:base.baseUrl + 'column_program/saveFile',
         actAddValue:false,
@@ -263,6 +319,18 @@
           paddingBottom: '53px',
           position: 'static'
         },
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.actCheckData.createTimeEnd);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.actCheckData.createTimeStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
         //查询参数
         actCheckData:{
           createTimeStart:'',
@@ -276,16 +344,15 @@
         uploadList:[],
         actVisible:false,
         imgUrl:'',
-        addPathStr:'',
         actFormData:{
           creatorId:'123456',
           name:'',
           slogan:'',
           participate:'',
-          num:'',
+          num:null,
           description:'',
           arrangement:'',
-          filePath:''
+          filePath:[]
         },
         //详情数据
         actDetailDate:{
@@ -302,7 +369,6 @@
         actReviseVisible:false,
         actReviseUploadList:[],
         actReviseDefaultList:[],
-        actRevisePath:'',
         actReviseImgUrl:'',
         actReviseId:'',
         actReviseFormData:{
@@ -310,14 +376,19 @@
           name:'',
           slogan:'',
           participate:'',
-          num:'',
+          num:null,
           description:'',
           arrangement:'',
-          filePath:'',
+          filePath:[],
+          delFilePath:[],
           id:''
         },
         //类型数据
         dataList:[
+          {
+            value:'3',
+            label:'全部'
+          },
           {
             value:'0',
             label:'正常'
@@ -378,7 +449,7 @@
             title:'操作选项',
             key:'action',
             align:'center',
-            width:260,
+            width:300,
             render:(h,params) => {
                if (params.row.status === 0) {
                 return h('div', [
@@ -410,6 +481,35 @@
                       }
                     }
                   }, '修改'),
+                  h('Button', {
+                    props: {
+                      type: 'error',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        axios.ActCancel({status:2,id:params.row.id})
+                          .then(res => {
+                            if (res.code === 200) {
+                              this.getActList();
+                              this.actTip = true;
+                              this.$refs.actTip.innerHTML = '该期节目已结束！';
+                            } else {
+                              this.actTip = true;
+                              this.$refs.actTip.innerHTML = res.message;
+                            }
+                          })
+                          .catch(error => {
+                            console.log(error);
+                            this.actTip = true;
+                            this.$refs.actTip.innerHTML = '操作失败！'
+                          })
+                      }
+                    }
+                  }, '结束'),
                   h('Button', {
                     props: {
                       type: 'error',
@@ -487,22 +587,22 @@
         listData:[],
         ruleValidate:{
           name:[
-            {required:true,message:'请填写节目名称'}
+            {validator:validateName}
           ],
           slogan:[
-            {required:true,message:'请填写节目口号'}
+            {validator:validateSlogan}
           ],
           participate:[
-            {required:true,message:'请填写参与方式'}
+            {validator:validateParticipate}
           ],
           num:[
-            {required:true,message:'请填写允许人数'}
+            {validator:validateNum}
           ],
           description:[
-            {required:true,message:'请填写节目介绍'}
+            {validator:validateDescription}
           ],
           arrangement:[
-            {required:true,message:'请填写节目预告'}
+            {validator:validateArrangement}
           ],
         }
       }
@@ -512,6 +612,10 @@
       this.getActList();
     },
     methods:{
+      actListClick:function () {
+        this.actCheckData.pageNum = 1;
+        this.getActList();
+      },
       getActList:function () { //获取活动列表
         this.loading = true;
         axios.ActList(this.actCheckData)
@@ -546,34 +650,75 @@
       },
       handleFormatError:function () { //图片格式不对
         this.actTip = true;
-        this.$refs.actTip.innerHTML = '请选择格式为“jpg，jpeg，png”格式的图片！'
+        this.$refs.actTip.innerHTML = '请选择格式为“jpg，jpeg，png，bmp”格式的图片！'
+      },
+      handleBeforeUploadRevise:function (file) {
+        const check = this.actReviseUploadList.length < 9;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '最多上传9张图片！'
+          });
+          return check;
+        }
       },
       //新增
+      handleBeforeUpload:function (file) {
+        const check = this.uploadList.length < 9;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '最多上传9张图片！'
+          });
+          return check;
+        }
+      },
       handleSuccess:function (res,file,fileList) {  //新增上传图片成功 设置file的URL 拼接path字符串
-        file.url = res.result[0].filePath;
-        this.addPathStr += res.result[0].filePath + ',';
-        console.log(this.addPathStr);
+        if (res.code === 200) {
+          file.url = res.result[0].filePath;
+        } else {
+          this.actTip = true;
+          this.$refs.actTip.innerHTML = res.message;
+        }
       },
       actSubClick:function () { //确认提交
-        this.actFormData.filePath = this.addPathStr.substr(0,this.addPathStr.length-1);
         this.$refs.actFormData.validate(valid => {
           if (valid) {
+            this.uploadList.forEach(item => {
+              this.actFormData.filePath.push(item.url);
+            });
             this.addingAct = true;
             axios.ActAdd(this.actFormData)
               .then(res => {
-                console.log(res);
+                //console.log(res);
+                this.addingAct = false;
                 if (res.code === 200) {
-                  this.addPathStr = '';
+                  this.actFormData.filePath = [];
                   this.actSuccess = true;
                   this.$refs.actAddTip.innerHTML = res.message;
                   this.getActList();
                 } else {
+                  this.actFormData.filePath = [];
                   this.actTip = true;
                   this.$refs.actTip.innerHTML = res.message;
                 }
               })
               .catch(error => {
                 console.log(error);
+                this.addingAct = false;
+                this.actFormData.filePath = [];
                 this.actTip = true;
                 this.$refs.actTip.innerHTML = '上传出错！'
               })
@@ -602,9 +747,9 @@
           .then(res => {
             //console.log(res);
             if (res.code === 200) {
-              if (res.result.filePath != null && res.result.filePath !== "") {
+              if (res.result.filePaths != null && res.result.filePaths !== "") {
                 this.actDetailDate.isPhoto = true;
-                this.actDetailDate.detailUploadList = res.result.filePath.split(',');
+                this.actDetailDate.detailUploadList = res.result.filePaths.split(',');
               } else {
                 this.actDetailDate.isPhoto = false;
                 this.actDetailDate.detailUploadList = [];
@@ -632,19 +777,17 @@
         axios.ActDetail({id:id})
           .then(res => {
             if (res.code === 200) {
-              if (res.result.filePath != null && res.result.filePath !== '') {
-                this.actRevisePath = res.result.filePath + ',';
-                let arr = res.result.filePath.split(',');
+              if (res.result.filePaths != null && res.result.filePaths !== '') {
+                let arr = res.result.filePaths.split(',');
                 arr.forEach((item,index) => {
                   this.actReviseDefaultList.push({url:item,name:index,status:'finished'});
                 });
               } else {
-                this.actRevisePath = '';
                 this.actReviseDefaultList = [];
               }
               this.$refs.actReviseUpload.fileList = this.actReviseDefaultList;
               this.actReviseUploadList = this.$refs.actReviseUpload.fileList;
-              console.log(this.actReviseDefaultList);
+              //console.log(this.actReviseDefaultList);
               this.actReviseFormData.name = res.result.name;
               this.actReviseFormData.slogan = res.result.slogan;
               this.actReviseFormData.participate = res.result.participate;
@@ -670,45 +813,54 @@
         this.actReviseVisible = true;
       },
       actReviseHandleSuccess:function (res,file,fileList) { //修改 图片上传成功
-        file.url = res.result[0].filePath;
-        this.actReviseUploadList = fileList;
-        this.actRevisePath += res.result[0].filePath + ',';
+        if (res.code === 200) {
+          file.url = res.result[0].filePath;
+          this.actReviseUploadList = fileList;
+        } else {
+          this.actTip = true;
+          this.$refs.actTip.innerHTML = res.message;
+        }
       },
       actReviseHandleRemove:function (file) { //修改删除图片
-        axios.ActDeletePhoto({fileUrl:file.url})
-          .then(res => {
-            const fileList = this.$refs.actReviseUpload.fileList;
-            this.$refs.actReviseUpload.fileList.splice(fileList.indexOf(file),1);
-            this.actReviseUploadList = this.$refs.actReviseUpload.fileList;
-          })
-          .catch(error => {
-            console.log(error);
-            this.actTip = true;
-            this.$refs.actTip.innerHTML = '删除出错！'
-          })
+        const fileList = this.$refs.actReviseUpload.fileList;
+        this.$refs.actReviseUpload.fileList.splice(fileList.indexOf(file),1);
+        this.actReviseUploadList = this.$refs.actReviseUpload.fileList;
+        this.actReviseFormData.delFilePath.push(file.url);
       },
       actReviseSubClick:function () { //修改提交
         this.actReviseFormData.id = this.actReviseId;
-        this.actReviseFormData.filePath = this.actRevisePath.substr(0,this.actRevisePath.length-1);
         this.$refs.actReviseFormData.validate(valid => {
           if (valid) {
+            this.actReviseUploadList.forEach(item => {
+              this.actReviseFormData.filePath.push(item.url);
+            });
+            this.revisingAct = true;
+            console.log(JSON.stringify(this.actReviseFormData));
             axios.ActRevise(this.actReviseFormData)
               .then(res => {
                 if (res.code === 200) {
+                  this.actReviseFormData.filePath = [];
+                  this.actReviseFormData.delFilePath = [];
                   this.actReviseValue = false;
                   this.clearActRevise();
                   this.actTip = true;
                   this.$refs.actTip.innerHTML = res.message;
                   this.getActList();
                 } else {
+                  this.actReviseFormData.filePath = [];
+                  this.actReviseFormData.delFilePath = [];
                   this.actTip = true;
                   this.$refs.actTip.innerHTML = res.message;
                 }
+                this.revisingAct = false;
               })
               .catch(error => {
                 console.log(error);
+                this.actReviseFormData.filePath = [];
+                this.actReviseFormData.delFilePath = [];
                 this.actTip = true;
-                this.$refs.actTip.innerHTML = '保存出错！'
+                this.$refs.actTip.innerHTML = '保存出错！';
+                this.revisingAct = false;
               })
           }
         })
@@ -720,6 +872,7 @@
       },
       //清空表单
       clearActAdd:function () { //新增清空
+        this.actFormData.filePath = [];
         this.$refs.actUpload.clearFiles();
         this.uploadList = this.$refs.actUpload.fileList;
         this.$refs.actFormData.resetFields();
@@ -739,7 +892,8 @@
         this.actReviseUploadList = this.$refs.actReviseUpload.fileList;
         this.$refs.actReviseFormData.resetFields();
         this.actReviseDefaultList = [];
-        this.actRevisePath = '';
+        this.actReviseFormData.filePath = [];
+        this.actReviseFormData.delFilePath = [];
         this.actReviseImgUrl = '';
         this.actReviseId = '';
       },
@@ -790,16 +944,23 @@
       cursor: pointer;
     }
   }
-  .add-image{
+  .divs{
     display: flex;
     flex-direction: row;
     justify-content: flex-start;
     .p{
       width: 100px;
-      height: 80px;
-      line-height: 80px;
+      height: 90px;
+      line-height: 90px;
       text-align: right;
       padding: 10px 12px 10px 0;
+    }
+    .add-image{
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      width: 550px;
     }
   }
   .add-detail{

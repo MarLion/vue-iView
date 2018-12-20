@@ -11,6 +11,13 @@
           <MenuItem v-for="(it,index) in item.items" :to="{path:it.path}" :key="it.name" :name="it.path">{{it.name}}</MenuItem>
         </Submenu>
       </Submenu>
+      <Submenu name="super" v-if="users === 'admin'">
+        <template slot="title">
+          <Icon type="ios-build"/>
+          <span>权限管理</span>
+        </template>
+        <MenuItem :to="{path: '/superAdmin'}" name="/superAdmin">权限设置</MenuItem>
+      </Submenu>
     </Menu>
   </div>
 </template>
@@ -24,6 +31,9 @@
       }
     },
     computed:{
+      users:function () {
+        return this.$store.state.admin_token;
+      },
       menus:function () {
         return JSON.parse(sessionStorage.getItem('menus'));
       },
@@ -35,6 +45,9 @@
       }
     },
     mounted () {
+      if (sessionStorage.getItem('userName') != null) {
+        this.$store.state.admin_token = sessionStorage.getItem('userName');
+      }
       if (sessionStorage.getItem('active') != null) {
         this.$store.state.activeTab = sessionStorage.getItem('active')
       }

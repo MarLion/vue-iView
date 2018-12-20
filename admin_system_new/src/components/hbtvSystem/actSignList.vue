@@ -15,16 +15,16 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10" @click="batchCancelSign(actBatchUser)">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" @click="batchCancelSign(actBatchUser,actBatchType)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignBeg" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignBeg" :options="begOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignEnd" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
         <span><Input v-model="actSignParams.name" style="width: 200px;"/></span>
-        <span class="ml10"><Button icon="ios-search" @click="getActSignList">查询</Button></span>
+        <span class="ml10"><Button icon="ios-search" @click="actSignListClick">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
@@ -54,6 +54,7 @@
         loading:false,
         actSignTip:false,
         actBatchUser:'',
+        actBatchType:'',
         //查询参数
         actSignParams:{
           programId:'',
@@ -62,6 +63,18 @@
           createTimeEnd:'',
           pageNum:1,
           pageSize:10
+        },
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.actSignParams.createTimeEnd);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.actSignParams.createTimeStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
         },
         columns:[
           {
@@ -135,7 +148,7 @@
                     },
                     on: {
                       click: () => {
-                        this.batchCancelSign(params.row.userId);
+                        this.batchCancelSign(params.row.id,params.row.userType);
                       }
                     }
                   }, '取消资格')
@@ -152,11 +165,15 @@
       this.getActSignList();
     },
     methods :{
+      actSignListClick:function () {
+        this.actSignParams.pageNum = 1;
+        this.getActSignList();
+      },
       getActSignList:function () { //查询列表
         this.loading = true;
         axios.ActSignList(this.actSignParams)
           .then(res => {
-            //console.log(JSON.stringify(res.result.list[0]));
+            //console.log(res.result.list);
             if (res.code === 200) {
               this.loading = false;
               this.listData = res.result.list;
@@ -183,17 +200,20 @@
       },
       actSelectUser:function (selection) {
         let arr = [];
+        let typeArr = [];
         selection.forEach(item => {
-          arr.push(item.userId);
+          arr.push(item.id);
+          typeArr.push(item.userType);
         });
         this.actBatchUser = arr.join(',');
+        this.actBatchType = typeArr.join(',');
       },
-      batchCancelSign:function (id) { //取消资格
+      batchCancelSign:function (id,type) { //取消资格
         if (id === '') {
           this.actSignTip = true;
           this.$refs.actSignTip.innerHTML = '请至少勾选一名用户！';
         } else {
-          axios.ActSignCancel({userIds:id})
+          axios.ActSignCancel({userIds:id,userType:type})
             .then(res => {
               if (res.data === '0') {
                 this.actBatchUser = '';

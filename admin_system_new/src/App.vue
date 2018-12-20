@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <Header v-show="$route.path!=='/'">
+    <Header v-if="$route.path!=='/'">
       <header-view></header-view>
     </Header>
     <Layout>
@@ -36,12 +36,6 @@ export default {
         !this.isCollapsed ? 'collapsed-width' : ''
       ]
     }
-  },
-  mounted () {
-    //window.addEventListener('beforeunload',evt => this.beforeunloadFun(evt))
-  },
-  destroyed () {
-     //window.removeEventListener('beforeunload')
   },
   methods:{
     beforeunloadFun:function () {

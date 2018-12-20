@@ -15,16 +15,16 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10" @click="cancelRight(batchUser)">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" @click="cancelRight(batchUser,batchType)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramStart" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramStart" :options="begOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramEnd" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
         <span><Input v-model="listParams.name" style="width: 200px;"/></span>
-        <span class="ml10"><Button icon="ios-search" @click="getDataEnList">查询</Button></span>
+        <span class="ml10"><Button icon="ios-search" @click="enCheckClickData">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
@@ -54,6 +54,7 @@
         loading:false,
         cancelTip:false,
         batchUser:'',//保存批量取消用户
+        batchType:'',//保存批type
         //条件查询参数
         listParams:{
           activityId:'',
@@ -62,6 +63,18 @@
           createTimeEnd:'',
           pageNum:1,
           pageSize:10
+        },
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.listParams.createTimeEnd);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.listParams.createTimeStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
         },
         columns:[
           {
@@ -135,7 +148,7 @@
                     },
                     on: {
                       click: () => {
-                        this.cancelRight(params.row.userId);
+                        this.cancelRight(params.row.id,params.row.userType);
                       }
                     }
                   }, '取消资格')
@@ -152,11 +165,15 @@
       this.getDataEnList();
     },
     methods :{
+      enCheckClickData:function () {
+        this.listParams.page = 1;
+        this.getDataEnList();
+      },
       getDataEnList:function () {
         this.loading = true;
         axios.BlindDateSignList(this.listParams)
           .then(res => {
-            //console.log(JSON.stringify(res.result.list));
+            //console.log(res.result.list);
             if (res.code === 200) {
               this.loading = false;
               this.listData = res.result.list;
@@ -176,19 +193,22 @@
         window.location.href = base.baseUrl + 'activity_user/exportActivityUserList?activityId='+this.listParams.activityId+'&name='+this.listParams.name+'&createTimeStart='+this.listParams.createTimeStart+'&createTimeEnd='+this.listParams.createTimeEnd;
       },
       selectUser:function (selection) {
-        let  userArr = [];
+        let userArr = [];
+        let typeArr = [];
         selection.forEach(item => {
-          userArr.push(item.userId);
+          userArr.push(item.id);
+          typeArr.push(item.userType);
         });
         this.batchUser = userArr.join(',');
+        this.batchType = typeArr.join(',');
         //console.log(this.batchUser);
       },
-      cancelRight:function (id) {
+      cancelRight:function (id,type) {
         if (id === '') {
           this.cancelTip = true;
           this.$refs.cancelTip.innerHTML = '请至少勾选一名用户！';
         } else {
-          axios.BlindDateCancelEn({userIds:id})
+          axios.BlindDateCancelEn({userIds:id,userType:type})
             .then(res => {
               //console.log(res);
               if (res.data === '0') {

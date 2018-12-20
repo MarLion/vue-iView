@@ -8,9 +8,9 @@
         </div>
         <div class="ticket-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseTicketStart" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseTicketStart" :options="begOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker format="yyyy-MM-dd" @on-change="chooseTicketEnd" type="date" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker format="yyyy-MM-dd" @on-change="chooseTicketEnd" type="date" :options="endOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">活动券名称：</span>
           <span><Input v-model="ticketCheckData.name" style="width: 200px;"/></span>
           <span class="ml15">状态类型：</span>
@@ -19,7 +19,7 @@
               <Option v-for="(item,index) in ticketStaList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
-          <span class="ml10"><Button icon="ios-search" @click="getTicketList">查询</Button></span>
+          <span class="ml10"><Button icon="ios-search" @click="ticketClick">查询</Button></span>
         </div>
       </div>
       <div class="ticket-list mt30">
@@ -43,26 +43,26 @@
       </div>
       <div class="add-form mt30">
       <Form :model="ticketData" ref="ticketData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-        <FormItem label="活动类型" prop="actType">
+        <FormItem label="活动类型：" prop="actType">
           <Select v-model="ticketData.actType" @on-change="getAct" style="width:100%;" >
             <Option v-for="(item,index) in actType" :value="item.value" :key="index">{{ item.label }}</Option>
           </Select>
         </FormItem>
-        <FormItem label="活动名称" prop="actId">
+        <FormItem label="活动名称：" prop="actId">
           <Select v-model="ticketData.actId" style="width:100%;" >
             <Option v-for="(item,index) in actList" :value="item.actId" :key="index">{{ item.actName }}</Option>
           </Select>
         </FormItem>
-        <FormItem label="活动券名" prop="name">
+        <FormItem label="活动券名：" prop="name">
           <Input type="text" v-model="ticketData.name"></Input>
         </FormItem>
-        <FormItem label="活动券类型" prop="type">
+        <FormItem label="活动券类型：" prop="type">
           <Select v-model="ticketData.type" style="width:100%;" >
             <Option v-for="(item,index) in ticType" :value="item.value" :key="index">{{ item.label }}</Option>
           </Select>
         </FormItem>
-        <FormItem label="发放数量" prop="num">
-          <Input type="text" v-model="ticketData.num"></Input>
+        <FormItem label="发放数量：" prop="num">
+          <InputNumber  v-model="ticketData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
         </FormItem>
         <FormItem style="width: 200px!important;">
           <Button type="primary" @click="ticketSub" :loading="ticketAdding">发布活动券</Button>
@@ -120,11 +120,11 @@
           </span>
       </div>
       <Form :model="ticketReviseData" ref="ticketRevise" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-        <FormItem label="活动券名" prop="name">
+        <FormItem label="活动券名：" prop="name">
           <Input type="text" v-model="ticketReviseData.name"></Input>
         </FormItem>
-        <FormItem label="发放数量" prop="num">
-          <Input type="text" v-model="ticketReviseData.num"></Input>
+        <FormItem label="发放数量：" prop="num">
+          <InputNumber v-model="ticketReviseData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
         </FormItem>
         <FormItem style="width: 200px!important;">
           <Button type="primary" @click="ticketReviseSub" :loading="ticketRevise">确定修改</Button>
@@ -145,6 +145,7 @@
       v-model="ticSuccess"
     >
       <p ref="addTicTip"></p>
+      <div slot="close"></div>
       <div slot="footer">
         <Button type="warning"  @click="goTicList">返回列表</Button>
         <Button type="info"  @click="addTicMore">继续添加</Button>
@@ -175,6 +176,10 @@
           position: 'static'
         },
         ticketStaList:[
+          {
+            value:'3',
+            label:'全部'
+          },
           {
             value:'0',
             label:'正常'
@@ -212,6 +217,18 @@
             label:'新人专享券'
           }
         ],
+        begOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.ticketCheckData.createTimeEnd);
+            return date && date.valueOf() > d;
+          }
+        },
+        endOption:{
+          disabledDate : date =>  {
+            const d = new Date(this.ticketCheckData.createTimeStart);
+            return date && date.valueOf() < d - 24*60*60*1000;
+          }
+        },
         //查询参数
         ticketCheckData:{
           name:'',
@@ -225,12 +242,13 @@
         total:'',
         //新增
         ticketData:{
+          //登录用户的id 先不管 传测试id
           creatorId:'123456',
           actType:'',
           actId:'',
           name:'',
           type:'',
-          num:''
+          num:null
         },
         //详情
         ticDetailData:{
@@ -245,7 +263,7 @@
         ticketReviseData:{
           id:'',
           name:'',
-          num:''
+          num:null
         },
         columns:[
           {
@@ -424,6 +442,10 @@
       this.getTicketList();
     },
     methods:{
+      ticketClick:function () {
+        this.ticketCheckData.page = 1;
+        this.getTicketList();
+      },
       getTicketList:function () {
         this.loading = true;
         axios.TicketList(this.ticketCheckData)
@@ -575,6 +597,7 @@
       },
       //清空表单
       clearTicketForm:function () {  //清空新增
+        this.actList = [];
         this.$refs.ticketData.resetFields();
       },
       clearTicketDetail:function () { //清空详情
@@ -596,8 +619,23 @@
         this.value2 = false;
       },
       addTicMore:function () {
-        this.clearTicketForm();
+        // this.clearTicketForm();
+        this.reSetForm();
         this.ticSuccess = false;
+      },
+      //自定义重置方法
+      reSetForm:function () {
+        this.$refs.ticketData.fields.forEach(function (e) {
+          if (e.prop === 'name') {
+            e.resetField();
+          }
+          if (e.prop === 'type') {
+            e.resetField();
+          }
+          if (e.prop === 'num') {
+            e.resetField();
+          }
+        })
       }
     }
   }
