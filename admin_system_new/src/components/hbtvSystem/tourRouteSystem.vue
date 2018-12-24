@@ -8,14 +8,14 @@
         </div>
         <div class="route-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseStartTime" :options="begOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="startTime" @on-change="chooseStartTime" :options="begOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseEndTime" :options="endOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="endTime" @on-change="chooseEndTime" :options="endOption" style="width: 200px;"></DatePicker></span>
           <span class="ml15">路线名称：</span>
           <span><Input v-model="routeNic" style="width: 200px;"/></span>
           <span class="ml15">状态类型：</span>
           <span>
-            <Select v-model="routeType" style="width:200px" @on-change="selectType">
+            <Select v-model="routeType" style="width:200px">
               <Option v-for="(item,index) in routeList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
@@ -24,7 +24,7 @@
       </div>
       <div class="route-list mt30">
         <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-        <Page :total="total" v-if="total>10" show-elevator show-total class="mt30" @on-change="pageChange"/>
+        <Page :total="total" :current="page" v-if="total>10" show-elevator show-total class="mt30" @on-change="pageChange"/>
       </div>
     </div>
     <!--新增路线-->
@@ -172,11 +172,11 @@
         </div>
         <div class="add-detail">
           <p class="p">景区介绍：</p>
-          <p class="detailSpan detailWidth">{{detailData.description}}</p>
+          <pre class="detailWidth">{{detailData.description}}</pre>
         </div>
         <div class="add-detail">
           <p class="p">行程安排：</p>
-          <p class="detailSpan detailWidth">{{detailData.tourArrangement}}</p>
+          <pre class="detailWidth">{{detailData.tourArrangement}}</pre>
         </div>
       </div>
     </Drawer>
@@ -277,6 +277,7 @@
     <Modal
       title="提示"
       v-model="loginFail"
+      :mask-closable = "false"
     >
       <p ref="failTip"></p>
       <div slot="footer">
@@ -286,6 +287,7 @@
     <Modal
       title="提示"
       v-model="addSuccess"
+      :mask-closable = "false"
     >
       <p ref="addTip"></p>
       <div slot="close"></div>
@@ -392,7 +394,7 @@
         reviseOption:{
           disabledDate : date =>  {
             const d = new Date(this.reviseData.tourStart);
-            return date && date.valueOf() < d;
+            return date && date.valueOf() < d - 24*60*60*1000;
           }
         },
         reviseEndOption:{
@@ -770,9 +772,6 @@
             this.$refs.failTip.innerHTML = '获取路线出错！'
           });
       },
-      selectType:function (t) {
-        //console.log(this.routeType);
-      },
       addCommunity:function () {
         this.value3 = true;
       },
@@ -878,7 +877,6 @@
                   this.formData.filePath = [];
                   this.addSuccess = true;
                   this.$refs.addTip.innerHTML = res.message;
-                  this.getRouteList();
                 } else {
                   this.formData.filePath = [];
                   this.loginFail = true;
@@ -902,10 +900,24 @@
         this.clearForm();
         this.value3 = false;
         this.addSuccess =false;
+        this.page = 1;
+        this.pageSize = 10;
+        this.startTime = '';
+        this.endTime = '';
+        this.routeNic = '';
+        this.routeType = '';
+        this.getRouteList();
       },
       addMore:function () {
        this.clearForm();
        this.addSuccess =false;
+       this.page = 1;
+       this.pageSize = 10;
+       this.startTime = '';
+       this.endTime = '';
+       this.routeNic = '';
+       this.routeType = '';
+       this.getRouteList();
       },
       //清空表单
       clearForm:function () {
@@ -972,7 +984,7 @@
               this.reviseData.filePath.push(item.url);
             });
             //console.log(this.reviseData.filePath);
-            //console.log(this.reviseData.delFilePath);
+            //console.log(JSON.stringify(this.reviseData));
             this.reviseAdding = true;
             axios.TourAddRoute(this.reviseData)
               .then(res => {
@@ -989,7 +1001,7 @@
                   this.getRouteList();
                 } else {
                   this.reviseData.filePath = [];
-                  this.reviseData.delFilePath = [];
+                  //this.reviseData.delFilePath = [];
                   this.loginFail = true;
                   this.$refs.failTip.innerHTML = res.message;
                 }
@@ -997,7 +1009,7 @@
               .catch(error => {
                 console.log(error);
                 this.reviseData.filePath = [];
-                this.reviseData.delFilePath = [];
+               // this.reviseData.delFilePath = [];
                 this.reviseAdding= false;
                 this.loginFail = true;
                 this.$refs.failTip.innerHTML = '上传出错！'
@@ -1081,6 +1093,10 @@
       width: 100px;
       text-align: right;
       padding: 10px 12px 10px 0;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
   }
   .detailSpan{

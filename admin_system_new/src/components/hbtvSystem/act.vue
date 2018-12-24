@@ -24,7 +24,7 @@
       </div>
       <div class="data-list mt30">
         <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-        <Page :total="total" v-if="total>10" show-elevator show-total class="mt30" @on-change="actPageChange"/>
+        <Page :total="total" :current="actCheckData.pageNum" v-if="total>10" show-elevator show-total class="mt30" @on-change="actPageChange"/>
       </div>
     </div>
     <!--新增-->
@@ -148,11 +148,11 @@
         </div>
         <div class="add-detail">
           <p class="p">节目介绍：</p>
-          <p class="detailSpan detailWidth">{{actDetailDate.description}}</p>
+          <pre class="detailWidth">{{actDetailDate.description}}</pre>
         </div>
         <div class="add-detail">
           <p class="p">节目预告：</p>
-          <p class="detailSpan detailWidth">{{actDetailDate.arrangement}}</p>
+          <pre class="detailWidth">{{actDetailDate.arrangement}}</pre>
         </div>
       </div>
     </Drawer>
@@ -235,6 +235,7 @@
     <Modal
       title="提示"
       v-model="actTip"
+      :mask-closable = "false"
     >
       <p ref="actTip"></p>
       <div slot="footer">
@@ -244,6 +245,7 @@
     <Modal
       title="提示"
       v-model="actSuccess"
+      :mask-closable = "false"
     >
       <p ref="actAddTip"></p>
       <div slot="close"></div>
@@ -708,7 +710,6 @@
                   this.actFormData.filePath = [];
                   this.actSuccess = true;
                   this.$refs.actAddTip.innerHTML = res.message;
-                  this.getActList();
                 } else {
                   this.actFormData.filePath = [];
                   this.actTip = true;
@@ -835,7 +836,7 @@
               this.actReviseFormData.filePath.push(item.url);
             });
             this.revisingAct = true;
-            console.log(JSON.stringify(this.actReviseFormData));
+            //console.log(JSON.stringify(this.actReviseFormData));
             axios.ActRevise(this.actReviseFormData)
               .then(res => {
                 if (res.code === 200) {
@@ -848,7 +849,7 @@
                   this.getActList();
                 } else {
                   this.actReviseFormData.filePath = [];
-                  this.actReviseFormData.delFilePath = [];
+                  //this.actReviseFormData.delFilePath = [];
                   this.actTip = true;
                   this.$refs.actTip.innerHTML = res.message;
                 }
@@ -857,7 +858,7 @@
               .catch(error => {
                 console.log(error);
                 this.actReviseFormData.filePath = [];
-                this.actReviseFormData.delFilePath = [];
+                //this.actReviseFormData.delFilePath = [];
                 this.actTip = true;
                 this.$refs.actTip.innerHTML = '保存出错！';
                 this.revisingAct = false;
@@ -905,10 +906,24 @@
         this.clearActAdd();
         this.actSuccess = false;
         this.actAddValue = false
+        this.actCheckData.createTimeStart = '';
+        this.actCheckData.createTimeEnd= '';
+        this.actCheckData.name = '';
+        this.actCheckData.status = '';
+        this.actCheckData.pageNum = 1;
+        this.actCheckData.pageSize = 10;
+        this.getActList();
       },
       addActMore:function () { //发布成功继续发布
         this.clearActAdd();
         this.actSuccess = false;
+        this.actCheckData.createTimeStart = '';
+        this.actCheckData.createTimeEnd= '';
+        this.actCheckData.name = '';
+        this.actCheckData.status = '';
+        this.actCheckData.pageNum = 1;
+        this.actCheckData.pageSize = 10;
+        this.getActList();
       }
     }
   }
@@ -972,6 +987,10 @@
       width: 100px;
       text-align: right;
       padding: 10px 12px 10px 0;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
   }
   .detailSpan{

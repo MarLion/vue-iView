@@ -24,7 +24,7 @@
       </div>
       <div class="ticket-list mt30">
         <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-        <Page :total="total" v-if="total>10" show-elevator show-total class="mt30" @on-change="ticPage"/>
+        <Page :total="total" :current="ticketCheckData.page" v-if="total>10" show-elevator show-total class="mt30" @on-change="ticPage"/>
       </div>
     </div>
     <!--新增-->
@@ -134,6 +134,7 @@
     <Modal
       title="提示"
       v-model="ticTip"
+      :mask-closable = "false"
     >
       <p ref="ticTip"></p>
       <div slot="footer">
@@ -143,6 +144,7 @@
     <Modal
       title="提示"
       v-model="ticSuccess"
+      :mask-closable = "false"
     >
       <p ref="addTicTip"></p>
       <div slot="close"></div>
@@ -514,7 +516,6 @@
                 if (res.code === 200) {
                   this.ticSuccess = true;
                   this.$refs.addTicTip.innerHTML = res.message;
-                  this.getTicketList();
                 } else {
                   this.ticTip = true;
                   this.$refs.ticTip.innerHTML = res.message;
@@ -617,11 +618,25 @@
         this.clearTicketForm();
         this.ticSuccess = false;
         this.value2 = false;
+        this.ticketCheckData.name = '';
+        this.ticketCheckData.status = '';
+        this.ticketCheckData.createTimeStart = '';
+        this.ticketCheckData.createTimeEnd = '';
+        this.ticketCheckData.page = 1;
+        this.ticketCheckData.rows= 10;
+        this.getTicketList();
       },
       addTicMore:function () {
         // this.clearTicketForm();
         this.reSetForm();
         this.ticSuccess = false;
+        this.ticketCheckData.name = '';
+        this.ticketCheckData.status = '';
+        this.ticketCheckData.createTimeStart = '';
+        this.ticketCheckData.createTimeEnd = '';
+        this.ticketCheckData.page = 1;
+        this.ticketCheckData.rows= 10;
+        this.getTicketList();
       },
       //自定义重置方法
       reSetForm:function () {

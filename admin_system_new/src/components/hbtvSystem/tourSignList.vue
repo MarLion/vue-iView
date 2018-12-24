@@ -29,7 +29,7 @@
     </div>
     <div class="list-list mt30">
       <Table border :columns="columns" :data="listData" :loading="loading" highlight-row @on-selection-change="changeSelect"></Table>
-      <Page :total="total" v-if="total>10" show-elevator show-total class="mt30" @on-change="pageChangeEn"/>
+      <Page :total="total" :current="page" v-if="total>10" show-elevator show-total class="mt30" @on-change="pageChangeEn"/>
     </div>
     <Modal
       title="提示"

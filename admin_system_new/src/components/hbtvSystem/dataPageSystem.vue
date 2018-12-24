@@ -24,7 +24,7 @@
       </div>
       <div class="data-list mt30">
         <Table border :columns="columns" :data="listData" :loading="loading"></Table>
-        <Page :total="total" v-if="total>10" show-elevator show-total @on-change="dataPageChange" class="mt30"/>
+        <Page :total="total" :current="dataCheckedPra.pageNum" v-if="total>10" show-elevator show-total @on-change="dataPageChange" class="mt30"/>
       </div>
     </div>
     <!--新增-->
@@ -110,7 +110,7 @@
                 </Col>
                 <Col span="10">
                   <FormItem prop="activityClockEnd">
-                    <TimePicker type="time" format="HH:mm" v-model="dataFormData.activityEndHms" @on-change="dataEndClock" :options="addOption" placeholder="选择结束时间" style="width: 150px;"></TimePicker>
+                    <TimePicker type="time" format="HH:mm" v-model="dataFormData.activityEndHms" @on-change="dataEndClock"  placeholder="选择结束时间" style="width: 150px;"></TimePicker>
                   </FormItem>
                 </Col>
               </Row>
@@ -195,11 +195,11 @@
         </div>
         <div class="add-detail">
           <p class="p">活动介绍：</p>
-          <p class="detailSpan detailWidth">{{dataDetailData.ins}}</p>
+          <pre class="detailWidth">{{dataDetailData.ins}}</pre>
         </div>
         <div class="add-detail">
           <p class="p">活动安排：</p>
-          <p class="detailSpan detailWidth">{{dataDetailData.arrange}}</p>
+          <pre class="detailWidth">{{dataDetailData.arrange}}</pre>
         </div>
       </div>
     </Drawer>
@@ -284,7 +284,7 @@
               </Col>
               <Col span="10">
                 <FormItem prop="activityClockEnd">
-                  <TimePicker type="time" format="HH:mm" v-model="dataReviseData.activityEndHms" @on-change="clockReEnd" :options="reviseOption" style="width: 150px;"></TimePicker>
+                  <TimePicker type="time" format="HH:mm" v-model="dataReviseData.activityEndHms" @on-change="clockReEnd" style="width: 150px;"></TimePicker>
                 </FormItem>
               </Col>
             </Row>
@@ -313,6 +313,7 @@
     <Modal
       title="提示"
       v-model="dataTip"
+      :mask-closable = "false"
     >
       <p ref="failTip"></p>
       <div slot="footer">
@@ -322,6 +323,7 @@
     <Modal
       title="提示"
       v-model="dataSuccess"
+      :mask-closable = "false"
     >
       <p ref="addTip"></p>
       <div slot="close"></div>
@@ -870,7 +872,6 @@
                   this.dataFormData.filePath = [];
                   this.dataSuccess = true;
                   this.$refs.addTip.innerHTML = res.message;
-                  this.getDataList();
                 } else {
                   this.dataTip = true;
                   this.dataFormData.filePath = [];
@@ -1022,7 +1023,7 @@
                   this.getDataList();
                 } else {
                   this.dataReviseData.filePath = [];
-                  this.dataReviseData.delFilePath = [];
+                  //this.dataReviseData.delFilePath = [];
                   this.dataTip = true;
                   this.$refs.failTip.innerHTML = res.message;
                 }
@@ -1030,7 +1031,7 @@
               .catch(error => {
                 console.log(error);
                 this.dataReviseData.filePath = [];
-                this.dataReviseData.delFilePath = [];
+                //this.dataReviseData.delFilePath = [];
                 this.dataReviseLoading = false;
                 this.dataTip = true;
                 this.$refs.failTip.innerHTML = '修改出错！'
@@ -1074,10 +1075,24 @@
         this.clearDataDa();
         this.value3 = false;
         this.dataSuccess = false;
+        this.dataCheckedPra.createTimeStart = '';
+        this.dataCheckedPra.createTimeEnd = '';
+        this.dataCheckedPra.name = '';
+        this.dataCheckedPra.status = '';
+        this.dataCheckedPra.pageNum = 1;
+        this.dataCheckedPra.pageSize = 10;
+        this.getDataList();
       },
       addDataMore:function () {
         this.clearDataDa();
         this.dataSuccess = false;
+        this.dataCheckedPra.createTimeStart = '';
+        this.dataCheckedPra.createTimeEnd = '';
+        this.dataCheckedPra.name = '';
+        this.dataCheckedPra.status = '';
+        this.dataCheckedPra.pageNum = 1;
+        this.dataCheckedPra.pageSize = 10;
+        this.getDataList();
       },
       //重置表单
       clearDataDa:function () {
@@ -1085,8 +1100,10 @@
         this.$refs.dataUpload.clearFiles();
         this.uploadList = this.$refs.dataUpload.fileList;
         this.$refs.dataForm.resetFields();
-        this.dataFormData.price = null;
+        this.dataFormData.price = 0;
         this.isOpen = true;
+        this.dataFormData.activityStartHms = '';
+        this.dataFormData.activityEndHms = '';
       },
       clearDataDetail:function () {
         this.dataDetailData.dataDetailUploadList = [];
@@ -1176,6 +1193,10 @@
       width: 100px;
       text-align: right;
       padding: 10px 12px 10px 0;
+    }
+    pre {
+      white-space: pre-wrap;
+      word-wrap: break-word;
     }
   }
   .detailSpan{

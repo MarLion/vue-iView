@@ -29,7 +29,7 @@
     </div>
     <div class="list-list mt30">
       <Table border :columns="columns" :data="listData" :loading="loading" highlight-row @on-selection-change="actSelectUser"></Table>
-      <Page :total="total" v-if="total>10" show-elevator show-total @on-change="actSignPageChange" class="mt30"/>
+      <Page :total="total" :current="actSignParams.pageNum" v-if="total>10" show-elevator show-total @on-change="actSignPageChange" class="mt30"/>
     </div>
     <Modal
       title="提示"
