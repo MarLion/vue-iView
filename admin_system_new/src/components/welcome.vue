@@ -1,21 +1,30 @@
 <template>
   <div class="welcome-container" id="contain">
-    <div class="data-amount">
-      <div>
-        <span class="bg-1">用户总数</span>
-        <span class="bg-2">{{userTotal}}</span>
+    <div v-if="users !== 'master'">
+      <div class="data-amount">
+        <div>
+          <span class="bg-1">注册用户总数</span>
+          <span class="bg-2">{{userTotal}}</span>
+        </div>
+        <div>
+          <span class="bg-1">订单总数</span>
+          <span class="bg-2">{{orderTotal}}</span>
+        </div>
+        <div>
+          <span class="bg-1">红娘服务请求量</span>
+          <span class="bg-2">{{atch}}</span>
+        </div>
+      </div>
+      <div class="chart-container mt70">
+        <div ref="conOne" class="table"></div>
+        <!--<div ref="conTwo" class="table"></div>-->
       </div>
       <div>
-        <span class="bg-1">订单总数</span>
-        <span class="bg-2">{{orderTotal}}</span>
+        <div ref="conThree" class="table-an"></div>
       </div>
     </div>
-    <div class="chart-container mt70">
-      <div ref="conOne" class="table"></div>
-      <div ref="conTwo" class="table"></div>
-    </div>
-    <div>
-      <div ref="conThree" class="table-an"></div>
+    <div v-else>
+      <h1 class="mt50">欢迎使用相亲交友后台管理系统</h1>
     </div>
   </div>
 </template>
@@ -36,37 +45,47 @@
     data () {
       return {
         userTotal:'',
-        orderTotal:''
+        orderTotal:'',
+        atch:''
       }
     },
     mounted () {
-      axios.GetTotalNumber()
-        .then(res => {
-          //console.log(res);
-          this.userTotal = res.data.userSum;
-          this.orderTotal = res.data.orderSum;
-        })
-        .catch(error => {
-          console.log(error);
-        });
-      this.beforeDrawLine();
+      if (sessionStorage.getItem('userName') != null) {
+        this.$store.state.admin_token = sessionStorage.getItem('userName');
+      }
+      if (this.users !== 'master') {
+        axios.GetTotalNumber()
+          .then(res => {
+            //console.log(res);
+            this.userTotal = res.data.userSum;
+            this.orderTotal = res.data.orderSum;
+            this.atch = res.data.atchmakerServiceSum
+          })
+          .catch(error => {
+            console.log(error);
+          });
+        this.beforeDrawLine();
+      }
+    },
+    computed : {
+      users:function () {
+        return this.$store.state.admin_token;
+      },
     },
     methods:{
       beforeDrawLine:function () {
         let countTime = [];
         let userAccount = [];
         let orderAccount = [];
-        let growthTime = [];
-        let userGrowth = [];
-        let orderGrowth = [];
+        let hnAccount = [];
         let pvTime = [];
         let pvCount = [];
+        let clcikCount = [];
         axios.GetChartsData({date:this.$trans.getCurrentDate()})
           .then(res => {
             //console.log(res);
             if (res.code === '0') {
               let count = res.data.count;
-              let growthRate = res.data.growthRate;
               let userPV = res.data.userPV;
               for (let item in count.userCount) {
                 countTime.push(item);
@@ -75,121 +94,94 @@
               for (let item in count.orderCount) {
                 orderAccount.push(count.orderCount[item]);
               }
-              for (let item in growthRate.userStatistics) {
-                growthTime.push(item);
-                userGrowth.push(growthRate.userStatistics[item]);
+              for (let item in count.hnServeCount) {
+                hnAccount.push(count.hnServeCount[item]);
               }
-              for (let item in growthRate.orderStatistics) {
-                orderGrowth.push(growthRate.orderStatistics[item]);
-              }
-              for (let item in userPV) {
+              for (let item in userPV.userActivity) {
                 pvTime.push(item);
-                pvCount.push(userPV[item]);
+                pvCount.push(userPV.userActivity[item]);
               }
-              this.drawLine(countTime,userAccount,orderAccount,growthTime,userGrowth,orderGrowth,pvTime,pvCount);
+              for (let item in userPV.userClicks) {
+                clcikCount.push(userPV.userClicks[item]);
+              }
+              this.drawLine(countTime,userAccount,orderAccount,hnAccount,pvTime,pvCount,clcikCount);
             }
           })
           .catch(error => {
             console.log(error);
           });
       },
-      drawLine:function (arr1,arr2,arr3,arr4,arr5,arr6,arr7,arr8) {
+      drawLine:function (arr1,arr2,arr3,arr4,arr7,arr8,arr9) {
         let myChart_1 = echarts.init(this.$refs.conOne);
-        let myChart_2 = echarts.init(this.$refs.conTwo);
         let myChart_3 = echarts.init(this.$refs.conThree);
         myChart_1.setOption({
           title:{
-           text:'数量'
+           text:'数\n量\n统\n记'
           },
           tooltip: {
             show:true
           },
           legend:{
-            data:['用户数量','订单数量']
+            data:['用户数量','订单数量','红娘请求数量']
           },
           xAxis: {
             type: 'category',
-            boundaryGap : false,
+            boundaryGap : true,
             data: arr1,
             //name:'月份'
           },
           yAxis: {
             type: 'value',
-            name:'用户数'
+            name:''
           },
             series: [
               {
                 name:'用户数量',
                 data: arr2,
-                type: 'line'
+                type: 'bar'
               },
               {
                 name:'订单数量',
                 data: arr3,
-                type: 'line'
+                type: 'bar'
+              },
+              {
+                name:'红娘请求数量',
+                data: arr4,
+                type: 'bar'
               },
             ]
         });
-        myChart_2.setOption({
-          title:{
-            text:'增长率'
-          },
-          tooltip: {
-            show:true
-          },
-          legend:{
-            data:['用户增长率','订单增长率']
-          },
-          xAxis: {
-            type: 'category',
-            boundaryGap : false,
-            data: arr4,
-            //name:'月份'
-          },
-          yAxis: {
-            type: 'value',
-            name:'%百分比'
-          },
-          series: [
-            {
-              name:'用户增长率',
-              data: arr5,
-              type: 'line'
-            },
-            {
-              name:'订单增长率',
-              data: arr6,
-              type: 'line'
-            }
-          ]
-        });
         myChart_3.setOption({
           title:{
-            text:'本月用户访问量'
+            text:'用\n户\n统\n记',
           },
           tooltip: {
             show:true
           },
           legend:{
-            data:[{
-              name:'访问量'
-            }]
+            data:['活跃用户量','用户点击量']
           },
           xAxis: {
             type: 'category',
             boundaryGap : false,
             data: arr7,
-            //name:'星期'
           },
           yAxis: {
             type: 'value',
-            //name:'访问量'
           },
-          series: [{
-            name:'访问量',
-            data: arr8,
-            type: 'line'
-          }]
+          series: [
+            {
+              name:'活跃用户量',
+              data: arr8,
+              type: 'line'
+            },
+            {
+              name:'用户点击量',
+              data: arr9,
+              type: 'line'
+            }
+          ]
         });
       }
     }
@@ -198,7 +190,8 @@
 
 <style lang="scss" scoped>
 .welcome-container{
-  height: 100%;
+  padding-bottom: 20px;
+  //height: calc(100vh - 64px);
   .data-amount,.data-add{
     display: flex;
     flex-direction: row;
@@ -218,19 +211,21 @@
   }
   .chart-container{
     width: 100%;
-    height: 400px;
+    height: 300px;
     display: flex;
     flex-direction: row;
     justify-content: space-around;
     flex-wrap: wrap;
     .table{
+      padding: 0 20px;
       height: 100%;
-      width: 40%;
+      width: 100%;
     }
   }
   .table-an{
+    padding: 0 20px;
     width: 100%;
-    height: 400px;
+    height: 300px;
   }
 }
 .bg-1{

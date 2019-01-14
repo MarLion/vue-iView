@@ -6,6 +6,7 @@
           <Icon type="ios-analytics"/>
           <span>红娘管理</span>
         </template>
+        <MenuItem v-if="users !== 'master'" :to="{path: '/welcome'}" name="/welcome">数据看板</MenuItem>
         <Submenu v-for="(item,index) in menus" :key="index" :name='item.group'>
           <template slot="title"><span>{{item.group}}</span></template>
           <MenuItem v-for="(it,index) in item.items" :to="{path:it.path}" :key="it.name" :name="it.path">{{it.name}}</MenuItem>

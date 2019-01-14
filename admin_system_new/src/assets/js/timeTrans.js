@@ -48,5 +48,23 @@ export default {
     day = day > 9 ? day : '0' + day;
     current = year + '-' + mon + '-' + day;
     return current;
+  },
+  //时间戳转时间
+  getTime:function (ins) {
+    let con = '';
+    let time = new Date(ins);
+    let year = time.getFullYear(),
+      month = time.getMonth() + 1,
+      day = time.getDate(),
+      hour = time.getHours(),
+      min = time.getMinutes(),
+      sec = time.getSeconds();
+    month = month > 9 ? month : '0'+month;
+    day = day > 9 ? day : '0'+day;
+    hour = hour > 9 ? hour : '0'+hour;
+    min = min > 9 ? min : '0'+min;
+    sec = sec > 9 ? sec : '0'+sec;
+    con = year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec;
+    return con;
   }
 }

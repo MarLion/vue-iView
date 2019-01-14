@@ -1,5 +1,5 @@
 <template>
-  <div class="data-container">
+  <div class="data-container content-pad">
     <div>
       <div class="data-fun">
         <div class="data-ope">
@@ -8,14 +8,14 @@
         </div>
         <div class="data-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckStart" :options="begOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckStart" v-model="dataCheckedPra.createTimeStart" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckEnd" v-model="dataCheckedPra.createTimeEnd" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">活动名称：</span>
-          <span><Input v-model="dataCheckedPra.name" style="width: 200px;"/></span>
+          <span><Input v-model="dataCheckedPra.name" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
           <span>
-            <Select v-model="dataCheckedPra.status" style="width:200px">
+            <Select v-model="dataCheckedPra.status" class="checkWid">
               <Option v-for="(item,index) in dataList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
@@ -413,7 +413,7 @@
         }
       };
       return {
-        uploadUrl:base.baseUrl + 'column_activity/saveFile',
+        uploadUrl:base.baseUrl.serviceOne + 'column_activity/saveFile',
         value3:false,
         dataReviseValue:false,
         dataDetailValue:false,
@@ -781,7 +781,7 @@
         this.value3 = true;
       },
       exportData:function () {
-        window.location.href = base.baseUrl + 'column_activity/exportActivityList?createTimeStart='+this.dataCheckedPra.createTimeStart+'&createTimeEnd='+this.dataCheckedPra.createTimeEnd+'&name='+this.dataCheckedPra.name+'&status='+this.dataCheckedPra.status;
+        window.location.href = base.baseUrl.serviceOne + 'column_activity/exportActivityList?createTimeStart='+this.dataCheckedPra.createTimeStart+'&createTimeEnd='+this.dataCheckedPra.createTimeEnd+'&name='+this.dataCheckedPra.name+'&status='+this.dataCheckedPra.status;
       },
       handleBeforeUploadRevise:function (file) {
         const check = this.dataUploadReviseList.length < 9;

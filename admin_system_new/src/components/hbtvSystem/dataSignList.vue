@@ -1,5 +1,5 @@
 <template>
-  <div class="list-container">
+  <div class="list-container content-pad">
     <div class="list-bread">
       <div class="list-tit">
         <h1>相亲活动报名清单</h1>
@@ -15,21 +15,21 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10" @click="cancelRight(batchUser,batchType)">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" :loading="cancelLoading" @click="cancelRight(batchUser,batchType)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramStart" :options="begOption" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramStart" :options="begOption" class="checkWid"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="paramEnd" :options="endOption" class="checkWid"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
-        <span><Input v-model="listParams.name" style="width: 200px;"/></span>
+        <span><Input v-model="listParams.name" class="checkWid"/></span>
         <span class="ml10"><Button icon="ios-search" @click="enCheckClickData">查询</Button></span>
       </div>
     </div>
     <div class="list-list mt30">
       <Table border :columns="columns" :data="listData" :loading="loading" highlight-row @on-selection-change="selectUser"></Table>
-      <Page :total="total" :current="listParams.page" v-if="total>10" show-elevator show-total @on-change="pageChangeDataEn" class="mt30"/>
+      <Page :total="total" :current="listParams.pageNum" v-if="total>10" show-elevator show-total @on-change="pageChangeDataEn" class="mt30"/>
     </div>
     <Modal
       title="提示"
@@ -50,6 +50,7 @@
     name: "dataSignList",
     data () {
       return {
+        cancelLoading:false,
         total:'',
         loading:false,
         cancelTip:false,
@@ -166,7 +167,7 @@
     },
     methods :{
       enCheckClickData:function () {
-        this.listParams.page = 1;
+        this.listParams.pageNum = 1;
         this.getDataEnList();
       },
       getDataEnList:function () {
@@ -190,7 +191,7 @@
           })
       },
       exportData :function () {
-        window.location.href = base.baseUrl + 'activity_user/exportActivityUserList?activityId='+this.listParams.activityId+'&name='+this.listParams.name+'&createTimeStart='+this.listParams.createTimeStart+'&createTimeEnd='+this.listParams.createTimeEnd;
+        window.location.href = base.baseUrl.serviceOne + 'activity_user/exportActivityUserList?activityId='+this.listParams.activityId+'&name='+this.listParams.name+'&createTimeStart='+this.listParams.createTimeStart+'&createTimeEnd='+this.listParams.createTimeEnd;
       },
       selectUser:function (selection) {
         let userArr = [];
@@ -208,9 +209,11 @@
           this.cancelTip = true;
           this.$refs.cancelTip.innerHTML = '请至少勾选一名用户！';
         } else {
+          this.cancelLoading = true;
           axios.BlindDateCancelEn({userIds:id,userType:type})
             .then(res => {
               //console.log(res);
+              this.cancelLoading = false;
               if (res.data === '0') {
                 this.batchUser = '';
                 this.cancelTip = true;
@@ -223,6 +226,7 @@
             })
             .catch(error => {
               console.log(error);
+              this.cancelLoading = false;
               this.cancelTip = true;
               this.$refs.cancelTip.innerHTML = '取消出错！';
             })

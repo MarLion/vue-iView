@@ -1,5 +1,5 @@
 <template>
-  <div class="activity-container">
+  <div class="activity-container content-pad">
     <div>
       <div class="activity-fun">
         <div class="activity-ope">
@@ -8,14 +8,14 @@
         </div>
         <div class="activity-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" class="checkWid"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" class="checkWid"></DatePicker></span>
           <span class="ml15">活动名称：</span>
-          <span><Input style="width: 200px;"/></span>
+          <span><Input class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
           <span>
-        <Select v-model="actType" style="width:200px">
+        <Select v-model="actType" class="checkWid">
           <Option v-for="(item,index) in actList" :value="item.value" :key="index">{{ item.label }}</Option>
         </Select>
       </span>
@@ -238,6 +238,27 @@
         </Form>
       </div>
     </Drawer>
+    <Modal
+      title="提示"
+      v-model="activityTip"
+      :mask-closable = "false"
+    >
+      <p ref="communityTip"></p>
+      <div slot="footer">
+        <Button type="info"  @click="del">确定</Button>
+      </div>
+    </Modal>
+    <Modal
+      title="提示"
+      v-model="actAddSuccess"
+      :mask-closable = "false"
+    >
+      <p ref="addTip"></p>
+      <div slot="footer">
+        <Button type="warning"  @click="goList">返回列表</Button>
+        <Button type="info"  @click="addMore">继续添加</Button>
+      </div>
+    </Modal>
   </div>
 </template>
 
@@ -298,6 +319,8 @@
         value3:false,
         activityDetailValue:false,
         activityRevisValue:false,
+        activityTip:false,
+        actAddSuccess:false,
         styles: {
           height: 'calc(100% - 55px)',
           overflow: 'auto',

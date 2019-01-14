@@ -1,5 +1,5 @@
 <template>
-  <div class="list-container">
+  <div class="list-container content-pad">
     <div class="list-bread">
       <div class="list-tit">
         <h1>活动券领取清单</h1>
@@ -15,15 +15,15 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10" @click="pCancelTic">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" :loading="cancelLoading" @click="pCancelTic">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signBeg" :options="begOption" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signBeg" :options="begOption" class="checkWid"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="signEnd" :options="endOption" class="checkWid"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
-        <span><Input v-model="signParam.userName" style="width: 200px;"/></span>
+        <span><Input v-model="signParam.userName" class="checkWid"/></span>
         <span class="ml10"><Button icon="ios-search" @click="ticSignListClick">查询</Button></span>
       </div>
     </div>
@@ -50,6 +50,7 @@
     name: "actTicketSignList",
     data () {
       return {
+        cancelLoading:false,
         loading:false,
         ticSignTip:false,
         ticUsers:'',//保存批量取消的用户
@@ -203,7 +204,7 @@
           })
       },
       exportData:function () { //导出表格
-        window.location.href = base.baseUrl + 'coupon/exportCouponUserList?couponId='+this.signParam.couponId+'&userName='+this.signParam.userName+'&enterTimeStart='+this.signParam.enterTimeStart+'&enterTimeEnd='+this.signParam.enterTimeEnd;
+        window.location.href = base.baseUrl.serviceOne + 'coupon/exportCouponUserList?couponId='+this.signParam.couponId+'&userName='+this.signParam.userName+'&enterTimeStart='+this.signParam.enterTimeStart+'&enterTimeEnd='+this.signParam.enterTimeEnd;
       },
       ticSelectedUser:function (selection) {
         let arr = [];
@@ -218,8 +219,10 @@
           this.ticSignTip = true;
           this.$refs.ticSignTip.innerHTML = '请至少勾选一名用户！';
         } else {
+          this.cancelLoading = true;
           axios.TicketSignBatchCancel({ids:this.ticUsers})
             .then(res => {
+              this.cancelLoading = false;
               this.ticSignTip = true;
               this.$refs.ticSignTip.innerHTML = res.message;
               if (res.code === 200) {
@@ -229,6 +232,7 @@
             })
             .catch(error => {
               console.log(error);
+              this.cancelLoading = false;
               this.ticSignTip = true;
               this.$refs.ticSignTip.innerHTML = '取消出错！';
             })

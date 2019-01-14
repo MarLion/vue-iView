@@ -1,5 +1,5 @@
 <template>
-    <div class="list-container">
+    <div class="list-container content-pad">
       <div class="list-bread">
         <div class="list-tit">
           <h1>活动报名清单</h1>
@@ -19,11 +19,11 @@
         </div>
         <div class="list-search">
           <span class="ml15">报名日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="startTime" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="startTime" class="checkWid"></DatePicker></span>
           <span class="ml15">报名日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="endTime" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="endTime" class="checkWid"></DatePicker></span>
           <span class="ml15">用户姓名：</span>
-          <span><Input v-model="userName" style="width: 200px;"/></span>
+          <span><Input v-model="userName" class="checkWid"/></span>
           <span class="ml10"><Button icon="ios-search" @click="getAyUserEnlist">查询</Button></span>
         </div>
       </div>

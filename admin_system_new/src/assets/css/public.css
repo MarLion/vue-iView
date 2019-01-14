@@ -35,3 +35,10 @@ input,button,textarea,select{*font-size:100%}
 .pos-re{position: relative;}
 .pos-ab{position: absolute;}
 .fw{font-weight: bold;}
+.content-pad{
+  padding: 10px 0 0 10px;
+}
+.checkWid{width: 200px!important;}
+ @media screen and (max-width: 1440px) {
+   .checkWid{width: 100px!important;}
+ }

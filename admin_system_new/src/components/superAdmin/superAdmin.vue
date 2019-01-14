@@ -14,10 +14,34 @@
             <Checkbox v-model="isFriSys" @on-change="friRoot"><Icon type="ios-arrow-down"></Icon>交友系统管理</Checkbox>
           </dt>
           <dd class="mt20">
-            <Checkbox v-model="isFriSysCommunity" @on-change="friSys">圈子管理</Checkbox>
+            <Checkbox v-model="isFriSysCommunity" @on-change="friSys">话题管理</Checkbox>
           </dd>
           <dd class="mt20">
             <Checkbox v-model="isFriSysActivity" @on-change="friSys">活动管理</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriGift" @on-change="friSys">礼物配置</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriLabel" @on-change="friSys">标签配置</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriPosition" @on-change="friSys">地理位置配置</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriQuestion" @on-change="friSys">题库配置</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriFirst" @on-change="friSys">模块层级管理</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriArticle" @on-change="friSys">文章管理</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriBanner" @on-change="friSys">Banner图管理</Checkbox>
+          </dd>
+          <dd class="mt20">
+            <Checkbox v-model="isFriTrends" @on-change="friSys">动态管理</Checkbox>
           </dd>
         </dl>
       </div>
@@ -71,6 +95,14 @@
         isFriSys:false,
         isFriSysCommunity:false,
         isFriSysActivity:false,
+        isFriGift:false,
+        isFriLabel:false,
+        isFriPosition:false,
+        isFriQuestion:false,
+        isFriFirst:false,
+        isFriArticle:false,
+        isFriBanner:false,
+        isFriTrends:false,
         isTvSys:false,
         isTvRoute:false,
         isTvDate:false,
@@ -115,6 +147,30 @@
                     if (items[j].name === '活动管理') {
                       this.isFriSysActivity = true;
                     }
+                    if (items[j].name === '礼物配置') {
+                      this.isFriGift = true;
+                    }
+                    if (items[j].name === '标签配置') {
+                      this.isFriLabel = true;
+                    }
+                    if (items[j].name === '地理位置配置') {
+                      this.isFriPosition = true;
+                    }
+                    if (items[j].name === '题库配置') {
+                      this.isFriQuestion = true;
+                    }
+                    if (items[j].name === '模块层级管理') {
+                      this.isFriFirst = true;
+                    }
+                    if (items[j].name === '文章管理') {
+                      this.isFriArticle = true;
+                    }
+                    if (items[j].name === 'Banner图管理') {
+                      this.isFriBanner = true;
+                    }
+                    if (items[j].name === '动态管理') {
+                      this.isFriTrends = true;
+                    }
                   }
                 }
                 if (menus[i].group === '湖北电视台专栏管理') {
@@ -148,6 +204,14 @@
         if (!this.isFriSys) {
           this.isFriSysCommunity = false;
           this.isFriSysActivity = false;
+          this.isFriGift = false;
+          this.isFriLabel = false;
+          this.isFriPosition = false;
+          this.isFriQuestion = false;
+          this.isFriFirst = false;
+          this.isFriArticle = false;
+          this.isFriBanner = false;
+          this.isFriTrends = false;
         }
       },
       tvRoot:function () {
@@ -159,10 +223,10 @@
         }
       },
       friSys:function () {
-        if (this.isFriSysActivity || this.isFriSysCommunity) {
+        if (this.isFriSysActivity || this.isFriSysCommunity || this.isFriGift || this.isFriLabel || this.isFriPosition || this.isFriQuestion || this.isFriFirst || this.isFriArticle || this.isFriBanner || this.isFriTrends) {
           this.isFriSys = true;
         }
-        if (!this.isFriSysActivity && !this.isFriSysCommunity) {
+        if (!this.isFriSysActivity && !this.isFriSysCommunity && !this.isFriGift && !this.isFriLabel && !this.isFriPosition && !this.isFriQuestion && !this.isFriFirst && !this.isFriArticle && !this.isFriBanner && !this.isFriTrends) {
           this.isFriSys = false;
         }
       },
@@ -187,6 +251,30 @@
           }
           if (this.isFriSysActivity) {
             obj1.items.push({name:'活动管理',path:'/activitySystem'})
+          }
+          if (this.isFriGift) {
+            obj1.items.push({name:'礼物配置',path:'/configureGift'})
+          }
+          if (this.isFriLabel) {
+            obj1.items.push({name:'标签配置',path:'/configureLabel'})
+          }
+          if (this.isFriPosition) {
+            obj1.items.push({name:'地理位置配置',path:'/configurePosition'})
+          }
+          if (this.isFriQuestion) {
+            obj1.items.push({name:'题库配置',path:'/configureQuestion'})
+          }
+          if (this.isFriFirst) {
+            obj1.items.push({name:'模块层级管理',path:'/configureFirstModel'})
+          }
+          if (this.isFriArticle) {
+            obj1.items.push({name:'文章管理',path:'/configureArticle'})
+          }
+          if (this.isFriBanner) {
+            obj1.items.push({name:'Banner图管理',path:'/configureBanner'})
+          }
+          if (this.isFriTrends) {
+            obj1.items.push({name:'动态管理',path:'/configureTrends'})
           }
           this.configureData.push(obj1);
         }
@@ -230,6 +318,14 @@
         this.isFriSys = false;
         this.isFriSysCommunity = false;
         this.isFriSysActivity = false;
+        this.isFriGift = false;
+        this.isFriLabel = false;
+        this.isFriPosition = false;
+        this.isFriQuestion = false;
+        this.isFriFirst = false;
+        this.isFriArticle = false;
+        this.isFriBanner = false;
+        this.isFriTrends = false;
         this.isTvSys = false;
         this.isTvRoute = false;
         this.isTvDate = false;

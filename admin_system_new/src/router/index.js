@@ -33,6 +33,7 @@ route.push({
       requireAuth:true
     }
   },
+  //相亲交友
   {
     path:'/communitySystem',
     name:'communitySystem',
@@ -65,6 +66,71 @@ route.push({
       requireAuth:true
     }
   },
+  {
+    path:'/configureGift',
+    name:'configureGift',
+    component: resolve => require(['../components/friendSysrem/configureGift.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/configureLabel',
+    name:'configureLabel',
+    component: resolve => require(['../components/friendSysrem/configureLabel.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/configurePosition',
+    name:'configurePosition',
+    component: resolve => require(['../components/friendSysrem/configurePosition.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/configureQuestion',
+    name:'configureQuestion',
+    component: resolve => require(['../components/friendSysrem/configureQuestion.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/configureFirstModel',
+    name:'configureFirstModel',
+    component: resolve => require(['../components/friendSysrem/configureFirstModel.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/configureArticle',
+    name:'configureArticle',
+    component: resolve => require(['../components/friendSysrem/configureArticle.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/configureBanner',
+    name:'configureBanner',
+    component: resolve => require(['../components/friendSysrem/configureBanner.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  {
+    path:'/configureTrends',
+    name:'configureTrends',
+    component: resolve => require(['../components/friendSysrem/configureTrends.vue'], resolve),
+    meta:{
+      requireAuth:true
+    }
+  },
+  //电视专栏
   {
     path:'/tourRouteSystem',
     name:'tourRouteSystem',

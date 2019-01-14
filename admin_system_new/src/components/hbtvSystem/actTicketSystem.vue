@@ -1,5 +1,5 @@
 <template>
-  <div class="ticket-container">
+  <div class="ticket-container content-pad">
     <div>
       <div class="ticket-fun">
         <div class="ticket-ope">
@@ -8,14 +8,14 @@
         </div>
         <div class="ticket-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseTicketStart" :options="begOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseTicketStart" v-model="ticketCheckData.createTimeStart" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker format="yyyy-MM-dd" @on-change="chooseTicketEnd" type="date" :options="endOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker format="yyyy-MM-dd" @on-change="chooseTicketEnd" type="date" v-model="ticketCheckData.createTimeEnd" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">活动券名称：</span>
-          <span><Input v-model="ticketCheckData.name" style="width: 200px;"/></span>
+          <span><Input v-model="ticketCheckData.name" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
           <span>
-            <Select v-model="ticketCheckData.status" style="width:200px">
+            <Select v-model="ticketCheckData.status" class="checkWid">
               <Option v-for="(item,index) in ticketStaList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
@@ -97,7 +97,7 @@
         <p class="detailSpan">{{ticDetailData.address}}</p>
       </div>
       <div class="add-detail">
-        <p class="p">发布数量：</p>
+        <p class="p">发放数量：</p>
         <p class="detailSpan">{{ticDetailData.num}}</p>
       </div>
       <div class="add-detail">
@@ -294,7 +294,7 @@
             align:'center'
           },
           {
-            title:'活动券数量',
+            title:'发放数量',
             key:'num',
             align:'center'
           },
@@ -492,7 +492,7 @@
         this.value2 = true;
       },
       exportData:function () { //导出表格
-        window.location.href =base.baseUrl + 'coupon/exportCouponList?name='+this.ticketCheckData.name+'&status='+this.ticketCheckData.status+'&createTimeStart='+this.ticketCheckData.createTimeStart+'&createTimeEnd='+this.ticketCheckData.createTimeEnd;
+        window.location.href =base.baseUrl.serviceOne + 'coupon/exportCouponList?name='+this.ticketCheckData.name+'&status='+this.ticketCheckData.status+'&createTimeStart='+this.ticketCheckData.createTimeStart+'&createTimeEnd='+this.ticketCheckData.createTimeEnd;
       },
       chooseTicketStart:function (date) { //选择查询开始时间
         this.ticketCheckData.createTimeStart = date;

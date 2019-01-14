@@ -1,5 +1,5 @@
 <template>
-  <div class="tan-container" v-if="isShow">
+  <div class="tan-container content-pad" v-if="isShow">
     <Tabs type="card" closable @on-tab-remove="handleTabRemove" v-model="activeTab" @on-click="tabClick">
       <TabPane  v-for="(item, index) in tabList" :label="item.label" :name="item.name" :key="item.name"></TabPane>
       <!--这里如果key绑定index的话会出现bug 当关闭中间的页签时被关闭项的后面一个页签无法加载 经测是由于key值绑定index引起 故使用name值-->

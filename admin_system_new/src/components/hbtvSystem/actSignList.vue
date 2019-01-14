@@ -1,5 +1,5 @@
 <template>
-  <div class="list-container">
+  <div class="list-container content-pad">
     <div class="list-bread">
       <div class="list-tit">
         <h1>节目报名清单</h1>
@@ -15,15 +15,15 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10" @click="batchCancelSign(actBatchUser,actBatchType)">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" :loading="cancelLoading" @click="batchCancelSign(actBatchUser,actBatchType)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignBeg" :options="begOption" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignBeg" :options="begOption" class="checkWid"></DatePicker></span>
         <span class="ml15">报名日期止：</span>
-        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
+        <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actSignEnd" :options="endOption" class="checkWid"></DatePicker></span>
         <span class="ml15">用户姓名：</span>
-        <span><Input v-model="actSignParams.name" style="width: 200px;"/></span>
+        <span><Input v-model="actSignParams.name" class="checkWid"/></span>
         <span class="ml10"><Button icon="ios-search" @click="actSignListClick">查询</Button></span>
       </div>
     </div>
@@ -50,6 +50,7 @@
     name: "actSignList",
     data () {
       return {
+        cancelLoading:false,
         total:'',
         loading:false,
         actSignTip:false,
@@ -190,7 +191,7 @@
           })
       },
       exportData :function () { //导出表格
-        window.location.href = base.baseUrl + 'column_user/exportProgramUserList?programId='+this.actSignParams.programId+'&name='+this.actSignParams.name+'&createTimeStart='+this.actSignParams.createTimeStart+'&createTimeEnd='+this.actSignParams.createTimeEnd;
+        window.location.href = base.baseUrl.serviceOne + 'column_user/exportProgramUserList?programId='+this.actSignParams.programId+'&name='+this.actSignParams.name+'&createTimeStart='+this.actSignParams.createTimeStart+'&createTimeEnd='+this.actSignParams.createTimeEnd;
       },
       actSignBeg:function (date) { //查询开始时间
         this.actSignParams.createTimeStart = date;
@@ -213,8 +214,10 @@
           this.actSignTip = true;
           this.$refs.actSignTip.innerHTML = '请至少勾选一名用户！';
         } else {
+          this.cancelLoading = true;
           axios.ActSignCancel({userIds:id,userType:type})
             .then(res => {
+              this.cancelLoading = false;
               if (res.data === '0') {
                 this.actBatchUser = '';
                 this.actSignTip = true;
@@ -227,6 +230,7 @@
             })
             .catch(error => {
               console.log(error);
+              this.cancelLoading = false;
               this.actSignTip = true;
               this.$refs.actSignTip.innerHTML = '取消出错！';
             })

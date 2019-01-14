@@ -1,5 +1,5 @@
 <template>
-  <div class="data-container">
+  <div class="data-container content-pad">
     <div>
       <div class="data-fun">
         <div class="data-ope">
@@ -8,14 +8,14 @@
         </div>
         <div class="data-search">
           <span class="ml15">发布日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateBeg" :options="begOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateBeg" v-model="actCheckData.createTimeStart" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">发布日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateEnd" :options="endOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateEnd" v-model="actCheckData.createTimeEnd" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">活动名称：</span>
-          <span><Input v-model="actCheckData.name" style="width: 200px;"/></span>
+          <span><Input v-model="actCheckData.name" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
           <span>
-            <Select v-model="actCheckData.status" style="width:200px">
+            <Select v-model="actCheckData.status" class="checkWid">
               <Option v-for="(item,index) in dataList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
@@ -307,7 +307,7 @@
         }
       };
       return {
-        uploadUrl:base.baseUrl + 'column_program/saveFile',
+        uploadUrl:base.baseUrl.serviceOne + 'column_program/saveFile',
         actAddValue:false,
         actDetailValue:false,
         actReviseValue:false,
@@ -642,7 +642,7 @@
         this.actAddValue = true;
       },
       exportData:function () { //导出表格
-        window.location.href = base.baseUrl + 'column_program/exportProgramList?createTimeStart='+this.actCheckData.createTimeStart+'&createTimeEnd='+this.actCheckData.createTimeEnd+'&name='+this.actCheckData.name+'&status='+this.actCheckData.status;
+        window.location.href = base.baseUrl.serviceOne + 'column_program/exportProgramList?createTimeStart='+this.actCheckData.createTimeStart+'&createTimeEnd='+this.actCheckData.createTimeEnd+'&name='+this.actCheckData.name+'&status='+this.actCheckData.status;
       },
       actCreateBeg:function (date) { //查询条件开始时间
         this.actCheckData.createTimeStart = date;
@@ -655,7 +655,7 @@
         this.$refs.actTip.innerHTML = '请选择格式为“jpg，jpeg，png，bmp”格式的图片！'
       },
       handleBeforeUploadRevise:function (file) {
-        const check = this.actReviseUploadList.length < 9;
+        const check = this.actReviseUploadList.length < 1;
         const len = file.name.length <= 50;
         if (!len) {
           this.$Notice.warning({
@@ -665,14 +665,14 @@
         }
         if (!check) {
           this.$Notice.warning({
-            title: '最多上传9张图片！'
+            title: '最多上传1张图片！'
           });
           return check;
         }
       },
       //新增
       handleBeforeUpload:function (file) {
-        const check = this.uploadList.length < 9;
+        const check = this.uploadList.length < 1;
         const len = file.name.length <= 50;
         if (!len) {
           this.$Notice.warning({
@@ -682,7 +682,7 @@
         }
         if (!check) {
           this.$Notice.warning({
-            title: '最多上传9张图片！'
+            title: '最多上传1张图片！'
           });
           return check;
         }

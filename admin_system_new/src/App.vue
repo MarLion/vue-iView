@@ -7,7 +7,7 @@
       <Sider v-show="$route.path!=='/'" :style="{background:'#ffffff'}" :class="siderClasses">
         <nav-view v-if="$route.path!=='/'" :class="menuitemClasses"></nav-view>
       </Sider>
-      <Content class="content-pad">
+      <Content :class="heiClass">
         <tab-view v-show="$route.path!=='/'"></tab-view>
         <router-view></router-view>
       </Content>
@@ -20,7 +20,7 @@ export default {
   name: 'App',
   data () {
     return {
-      isCollapsed: false
+      isCollapsed: false,
     };
   },
   computed: {
@@ -35,6 +35,11 @@ export default {
       return [
         !this.isCollapsed ? 'collapsed-width' : ''
       ]
+    },
+    heiClass:function () {
+      return [
+        this.$route.path === '/welcome' ? 'layout-hei' : ''
+      ]
     }
   },
   methods:{
@@ -47,6 +52,7 @@ export default {
 
 <style>
   @import "assets/css/public.css";
+  @import "assets/css/font.css";/*富文本编辑器自定义字体*/
   #app {
     /*font-family: 'Avenir', Helvetica, Arial, sans-serif;*/
     -webkit-font-smoothing: antialiased;
@@ -84,6 +90,10 @@ export default {
     height: 100%;
     width: 100%;
   }
+  .layout-hei{
+    height: calc(100vh - 64px);
+    overflow: hidden;
+  }
   .menu-item span{
     display: inline-block;
     overflow: hidden;
@@ -117,7 +127,7 @@ export default {
     vertical-align: middle;
     font-size: 22px;
   }
-  .content-pad{
-    padding: 10px 0 0 10px;
+  .tabHei{
+    height: calc(100vh - 132px);;
   }
 </style>

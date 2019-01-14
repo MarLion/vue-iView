@@ -1,5 +1,5 @@
 <template>
-  <div class="route-container">
+  <div class="route-container content-pad">
     <div>
       <div class="route-fun">
         <div class="route-ope">
@@ -8,15 +8,15 @@
         </div>
         <div class="route-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="startTime" @on-change="chooseStartTime" :options="begOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="startTime" @on-change="chooseStartTime" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="endTime" @on-change="chooseEndTime" :options="endOption" style="width: 200px;"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="endTime" @on-change="chooseEndTime" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">路线名称：</span>
-          <span><Input v-model="routeNic" style="width: 200px;"/></span>
+          <span><Input v-model="routeNic" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
           <span>
             <Select v-model="routeType" style="width:200px">
-              <Option v-for="(item,index) in routeList" :value="item.value" :key="index">{{ item.label }}</Option>
+              <Option v-for="(item,index) in detailList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
           <span class="ml10"><Button icon="ios-search" @click="checkClick">查询</Button></span>
@@ -31,7 +31,7 @@
     <Drawer
       title="发布旅游路线"
       v-model="value3"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close = 'clearForm'
@@ -77,11 +77,11 @@
               </Modal>
             </div>
           </div>
-          <Form :model="formData" ref="formData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-            <FormItem label="线路名称：" prop="name">
-              <Input type="text" v-model="formData.name"></Input>
+          <Form :model="formData" ref="formData" :rules="ruleValidate" :label-width="100" style="width: 100%;margin-top: 20px;">
+            <FormItem label="线路名称：" prop="name" style="width: 500px;">
+              <Input type="text" v-model="formData.name" ></Input>
             </FormItem>
-            <FormItem label="行程时间：" prop="date">
+            <FormItem label="行程时间：" prop="date" style="width: 500px;">
               <Row>
                 <Col span="10">
                   <FormItem prop="tourStart">
@@ -98,22 +98,73 @@
                 </Col>
               </Row>
             </FormItem>
-            <FormItem label="产品价格：" prop="price">
-              <InputNumber v-model="formData.price" :max="10000000" :min="0" style="width: 95%;"></InputNumber>
-              <span>元</span>
+            <FormItem label="产品价格：" prop="price" style="width: 500px;">
+              <InputNumber v-model="formData.price" :max="10000000" :min="0" style="width: 90%;"></InputNumber>
+              <span>玄乐币</span>
             </FormItem>
-            <FormItem label="费用清单：" prop="tourList">
+            <FormItem label="费用清单：" prop="tourList" style="width: 500px;">
               <Input type="text" v-model="formData.tourList"></Input>
             </FormItem>
-            <FormItem label="允许人数：" prop="num">
+            <FormItem label="允许人数：" prop="num" style="width: 500px;">
               <InputNumber  v-model="formData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
             </FormItem>
-            <FormItem label="景区介绍：" prop="description">
-              <Input type="textarea" v-model="formData.description"></Input>
+            <FormItem label="详情类型：" style="width: 500px;">
+              <Select v-model="formData.infoType" style="width:100%">
+                <Option v-for="(item,index) in detailList" :value="item.value" :key="index">{{ item.label }}</Option>
+              </Select>
             </FormItem>
-            <FormItem label="行程安排：" prop="tourArrangement">
-              <Input type="textarea" v-model="formData.tourArrangement"></Input>
-            </FormItem>
+            <template v-if="formData.infoType === 1">
+              <FormItem label="玄乐地址：" prop="xlInfoUrl" style="width: 500px;">
+                <Input type="text" v-model="formData.xlInfoUrl"></Input>
+              </FormItem>
+              <FormItem label="电视台地址：" prop="tvInfoUrl" style="width: 500px;">
+                <Input type="text" v-model="formData.tvInfoUrl"></Input>
+              </FormItem>
+            </template>
+            <template v-else>
+              <FormItem label="景区介绍：">
+                <div class="editor-container">
+                  <quill-editor
+                    ref="myEditor"
+                    v-model="formData.description"
+                    :options="myOptions"
+                  ></quill-editor>
+                  <Upload
+                    :action="ediUploadUrl"
+                    ref="editorUpload"
+                    class="editorUp"
+                    :on-success="handleEdiSuccess"
+                    :format="['jpg','jpeg','png','bmp']"
+                    :on-format-error="handleEdiFormatError"
+                    :before-upload="handleEdiBefore"
+                    style="display: none"
+                  >
+                    <Button>点击上传</Button>
+                  </Upload>
+                </div>
+              </FormItem>
+              <FormItem label="行程安排：">
+                <div class="editor-container">
+                  <quill-editor
+                    ref="arrangeEditor"
+                    v-model="formData.tourArrangement"
+                    :options="myArrOptions"
+                  ></quill-editor>
+                  <Upload
+                    :action="ediUploadUrl"
+                    ref="arrEditorUpload"
+                    class="arrEditorUp"
+                    :on-success="arrHandleEdiSuccess"
+                    :format="['jpg','jpeg','png','bmp']"
+                    :on-format-error="handleEdiFormatError"
+                    :before-upload="handleEdiBefore"
+                    style="display: none"
+                  >
+                    <Button>点击上传</Button>
+                  </Upload>
+                </div>
+              </FormItem>
+            </template>
             <FormItem style="width: 200px!important;">
               <Button type="primary" @click="subClick" :loading="adding">确认发布</Button>
             </FormItem>
@@ -124,7 +175,7 @@
     <Drawer
       title="旅游路线详情"
       v-model="value4"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close="clearDetailData"
@@ -159,7 +210,7 @@
         <div class="add-detail">
           <p class="p">产品价格：</p>
           <p class="detailSpan">{{detailData.price}}</p>
-          <p class="detailSpan">元</p>
+          <p class="detailSpan">玄乐币</p>
         </div>
         <div class="add-detail">
           <p class="p">费用清单：</p>
@@ -170,21 +221,33 @@
           <p class="detailSpan">{{detailData.num}}</p>
           <p class="detailSpan">人</p>
         </div>
-        <div class="add-detail">
-          <p class="p">景区介绍：</p>
-          <pre class="detailWidth">{{detailData.description}}</pre>
-        </div>
-        <div class="add-detail">
-          <p class="p">行程安排：</p>
-          <pre class="detailWidth">{{detailData.tourArrangement}}</pre>
-        </div>
+        <template v-if="isCustom">
+          <div class="add-detail">
+            <p class="p">玄乐地址：</p>
+            <p class="detailWidth" ref="xl"></p>
+          </div>
+          <div class="add-detail">
+            <p class="p">电视台地址：</p>
+            <p class="detailWidth" ref="tv"></p>
+          </div>
+        </template>
+        <template v-if="isMod">
+          <div class="add-detail">
+            <p class="p">景区介绍：</p>
+            <p class="detailWidth" ref="des"></p>
+          </div>
+          <div class="add-detail">
+            <p class="p">行程安排：</p>
+            <p class="detailWidth" ref="arrange"></p>
+          </div>
+        </template>
       </div>
     </Drawer>
     <!--修改路线-->
     <Drawer
       title="旅游路线修改"
       v-model="value5"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close = 'clearRevise'
@@ -231,11 +294,11 @@
             </Modal>
           </div>
         </div>
-        <Form :model="reviseData" ref="reviseData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="线路名称：" prop="name">
+        <Form :model="reviseData" ref="reviseData" :rules="ruleValidate" :label-width="100" style="width: 100%;margin-top: 20px;">
+          <FormItem label="线路名称：" prop="name" style="width: 500px;">
             <Input type="text" v-model="reviseData.name"></Input>
           </FormItem>
-          <FormItem label="行程时间：">
+          <FormItem label="行程时间：" style="width: 500px;">
             <Row>
               <Col span="10">
                 <FormItem prop="tourStart">
@@ -252,22 +315,73 @@
               </Col>
             </Row>
           </FormItem>
-          <FormItem label="产品价格：" prop="price">
-            <InputNumber v-model="reviseData.price" :max="10000000" :min="0" style="width: 95%;"></InputNumber>
-            <span>元</span>
+          <FormItem label="产品价格：" prop="price" style="width: 500px;">
+            <InputNumber v-model="reviseData.price" :max="10000000" :min="0" style="width: 90%;"></InputNumber>
+            <span>玄乐币</span>
           </FormItem>
-          <FormItem label="费用清单：" prop="tourList">
+          <FormItem label="费用清单：" prop="tourList" style="width: 500px;">
             <Input type="text" v-model="reviseData.tourList"></Input>
           </FormItem>
-          <FormItem label="允许人数：" prop="num">
+          <FormItem label="允许人数：" prop="num" style="width: 500px;">
             <InputNumber v-model="reviseData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
-          <FormItem label="景区介绍：" prop="description">
-            <Input type="textarea" v-model="reviseData.description"></Input>
+          <FormItem label="详情类型：" style="width: 500px;">
+            <Select v-model="reviseData.infoType" style="width:100%" @on-change="infoTypeChange">
+              <Option v-for="(item,index) in detailList" :value="item.value" :key="index">{{ item.label }}</Option>
+            </Select>
           </FormItem>
-          <FormItem label="行程安排：" prop="tourArrangement">
-            <Input type="textarea" v-model="reviseData.tourArrangement"></Input>
-          </FormItem>
+          <template v-if="isReCustom">
+            <FormItem label="玄乐地址：" prop="xlInfoUrl" style="width: 500px;">
+              <Input type="text" v-model="reviseData.xlInfoUrl"></Input>
+            </FormItem>
+            <FormItem label="电视台地址：" prop="tvInfoUrl" style="width: 500px;">
+              <Input type="text" v-model="reviseData.tvInfoUrl"></Input>
+            </FormItem>
+          </template>
+          <template v-if="isReMod">
+            <FormItem label="景区介绍：">
+              <div class="editor-container">
+                <quill-editor
+                  ref="myReEditor"
+                  v-model="reviseData.description"
+                  :options="myReOptions"
+                ></quill-editor>
+                <Upload
+                  :action="ediUploadUrl"
+                  ref="editorReUpload"
+                  class="editorReUp"
+                  :on-success="reHandleEdiSuccess"
+                  :format="['jpg','jpeg','png','bmp']"
+                  :on-format-error="handleEdiFormatError"
+                  :before-upload="handleEdiBefore"
+                  style="display: none"
+                >
+                  <Button>点击上传</Button>
+                </Upload>
+              </div>
+            </FormItem>
+            <FormItem label="行程安排：">
+              <div class="editor-container">
+                <quill-editor
+                  ref="arrangeReEditor"
+                  v-model="reviseData.tourArrangement"
+                  :options="myArrReOptions"
+                ></quill-editor>
+                <Upload
+                  :action="ediUploadUrl"
+                  ref="arrEditorReUpload"
+                  class="arrEditorReUp"
+                  :on-success="reArrHandleEdiSuccess"
+                  :format="['jpg','jpeg','png','bmp']"
+                  :on-format-error="handleEdiFormatError"
+                  :before-upload="handleEdiBefore"
+                  style="display: none"
+                >
+                  <Button>点击上传</Button>
+                </Upload>
+              </div>
+            </FormItem>
+          </template>
           <FormItem style="width: 200px!important;">
             <Button type="primary" @click="reviseSub" :loading="reviseAdding">确认修改</Button>
           </FormItem>
@@ -302,7 +416,33 @@
 <script>
   import axios from "../../axios/axios";
   import * as base from '../../axios/base';
+  import { quillEditor } from 'vue-quill-editor';
+  import * as Quill from 'quill';
+  import index from "@/router";
+  const fonts = ['SimSun', 'SimHei','Microsoft-YaHei','KaiTi','FangSong','Arial','Times-New-Roman','sans-serif'];
+  const Font = Quill.import('formats/font');
+  Font.whitelist = fonts; //将字体加入到白名单
+  Quill.register(Font, true);
+  const toolbarOptions= [
+    ['bold', 'italic', 'underline', 'strike'],
+    ['blockquote', 'code-block'],
 
+    [{ 'header': 1 }, { 'header': 2 }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'script': 'sub'}, { 'script': 'super' }],
+    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'direction': 'rtl' }],
+
+    [{ 'size': ['small', false, 'large', 'huge'] }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'font': fonts }],
+    [{ 'align': [] }],
+
+    ['clean'],
+    ['link','image']
+  ];
   export default {
     name: "tourRouteSystem",
     data () {
@@ -363,8 +503,23 @@
           callback();
         }
       };
+      const validateXl = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写详情地址'))
+        } else {
+          callback();
+        }
+      };
+      const validateTv = (rule,value,callback) => {
+        if (value === '') {
+          callback(new Error('请填写详情地址'))
+        } else {
+          callback();
+        }
+      };
       return {
-        uploadUrl:base.baseUrl + 'column_tour/saveFile',
+        uploadUrl:base.baseUrl.serviceOne + 'column_tour/saveFile',
+        ediUploadUrl:base.baseUrl.serviceOne + 'gift/saveGiftFile',//编辑器插入图片上传接口 和礼物配置一个接口
         value3:false,
         value4:false,
         value5:false,
@@ -428,6 +583,16 @@
         ],
         total:'',
         loading:false,
+        detailList:[
+          {
+            value:0,
+            label:'模板'
+          },
+          {
+            value:1,
+            label:'自定义'
+          }
+        ],
         //请求列表参数
         page:1,
         pageSize:10,
@@ -467,7 +632,7 @@
             align:'center'
           },
           {
-            title:'线路价格（元）',
+            title:'线路价格（玄乐币）',
             key:'price',
             align:'center'
           },
@@ -498,6 +663,7 @@
                           .then(res => {
                             //console.log(res);
                             if (res.code === 200) {
+                              this.value4 = true;
                               if (res.result.filePaths != null && res.result.filePaths !== "" ) {
                                 this.detailData.isPhoto = true;
                                 this.detailData.detailUploadList = res.result.filePaths.split(',');
@@ -511,9 +677,18 @@
                               this.detailData.price = res.result.price;
                               this.detailData.tourList = res.result.tourList;
                               this.detailData.num = res.result.num;
+                              this.detailData.infoType = res.result.infoType;
                               this.detailData.description = res.result.description;
                               this.detailData.tourArrangement = res.result.tourArrangement;
-                              this.value4 = true;
+                              if (res.result.infoType === 0) {
+                                this.isCustom = false;
+                                this.$refs.des.innerHTML = this.detailData.description;
+                                this.$refs.arrange.innerHTML = res.result.tourArrangement;
+                              } else {
+                                this.isMod = false;
+                                this.$refs.xl.innerHTML = res.result.xlInfoUrl;
+                                this.$refs.tv.innerHTML = res.result.tvInfoUrl;
+                              }
                             } else {
                               this.loginFail = true;
                               this.$refs.failTip.innerHTML = res.message;
@@ -559,8 +734,16 @@
                               this.reviseData.price = res.result.price;
                               this.reviseData.tourList = res.result.tourList;
                               this.reviseData.num = res.result.num;
-                              this.reviseData.description = res.result.description;
-                              this.reviseData.tourArrangement = res.result.tourArrangement;
+                              this.reviseData.infoType = res.result.infoType;
+                              if (res.result.infoType === 0) {
+                                this.isReCustom = false;
+                                this.reviseData.description = res.result.description;
+                                this.reviseData.tourArrangement = res.result.tourArrangement;
+                              } else {
+                                this.isReMod = false;
+                                this.reviseData.xlInfoUrl = res.result.xlInfoUrl;
+                                this.reviseData.tvInfoUrl = res.result.tvInfoUrl;
+                              }
                               this.reviseId = params.row.id;
                               this.value5 = true;
                             } else {
@@ -667,6 +850,9 @@
           price:null,
           tourList:'',
           num:null,
+          infoType:0,
+          xlInfoUrl:'',
+          tvInfoUrl:'',
           description:'',
           tourArrangement:'',
           filePath:[]
@@ -695,12 +881,20 @@
           ],
           tourArrangement:[
             {validator:validateArragne}
+          ],
+          xlInfoUrl:[
+            {validator:validateXl}
+          ],
+          tvInfoUrl:[
+            {validator:validateTv}
           ]
         },
         loginFail:false,
         addSuccess:false,
         adding:false,
         //详情data
+        isMod:true,
+        isCustom:true,
         detailData:{
           detailUploadList:[],
           isPhoto:true,
@@ -710,10 +904,15 @@
           price:'',
           tourList:'',
           num:'',
+          infoType:1,
+          xlInfoUrl:'',
+          tvInfoUrl:'',
           description:'',
           tourArrangement:'',
         },
         //修改
+        isReMod:true,
+        isReCustom:true,
         reviseVisible:false,
         reviseDefaultList:[],
         reviseUploadList:[],
@@ -727,12 +926,89 @@
           price:null,
           tourList:'',
           num:null,
+          infoType:1,
+          xlInfoUrl:'',
+          tvInfoUrl:'',
           description:'',
           tourArrangement:'',
           filePath:[],
           delFilePath:[]
         },
         reviseAdding:false,
+        //景区介绍 行程安排编辑器
+        myOptions:{
+          placeholder:'请编写景区介绍',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.editorUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        myArrOptions:{
+          placeholder:'请编写行程安排',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.arrEditorUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        //景区介绍 行程安排修改编辑器option
+        myReOptions:{
+          placeholder:'请编写景区介绍',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.editorReUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        myArrReOptions:{
+          placeholder:'请编写行程安排',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.arrEditorReUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
       }
     },
     mounted () {
@@ -776,7 +1052,7 @@
         this.value3 = true;
       },
       exportData:function () {
-        window.location.href = base.baseUrl +  'column_tour/exportTourList?createTimeStart='+this.startTime+'&createTimeEnd='+this.endTime+'&name='+this.routeNic+'&status='+this.routeType;
+        window.location.href = base.baseUrl.serviceOne +  'column_tour/exportTourList?createTimeStart='+this.startTime+'&createTimeEnd='+this.endTime+'&name='+this.routeNic+'&status='+this.routeType;
       },
       pageChange:function (page) {
         this.page = page;
@@ -927,6 +1203,11 @@
         this.formData.filePath = [];
         //重置表单
         this.$refs.formData.resetFields();
+        this.formData.description = '';
+        this.formData.tourArrangement = '';
+        this.formData.xlInfoUrl = '';
+        this.formData.tvInfoUrl = '';
+        this.formData.infoType = 0
       },
       //清空detail数据
       clearDetailData:function () {
@@ -940,6 +1221,11 @@
         this.detailData.tourList = '';
         this.detailData.description = '';
         this.detailData.tourArrangement= '';
+        this.detailData.xlInfoUrl = '';
+        this.detailData.tvInfoUrl = '';
+        this.detailData.infoType = 0;
+        this.isMod = true;
+        this.isCustom = true;
       },
       //修改路线
       handleReviseSucess:function (res,file,filelist) {
@@ -1020,6 +1306,8 @@
         });
       },
       clearRevise:function () {
+        this.isReMod = true;
+        this.isReCustom = true;
         //重置图片
         this.$refs.reviseUpload.clearFiles();
         this.reviseUploadList = this.$refs.reviseUpload.fileList;
@@ -1030,7 +1318,96 @@
         this.reviseDefaultList = [];
         this.reviseImgUrl = '';
         this.reviseId = '';
+        this.reviseData.description = '';
+        this.reviseData.tourArrangement = '';
+        this.reviseData.xlInfoUrl = '';
+        this.reviseData.tvInfoUrl = '';
+        this.reviseData.infoType = 0
       },
+      //景区介绍编辑器上传图片
+      handleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.myEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //行程安排编辑器上传图片
+      arrHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.arrangeEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //景区介绍修改插入图片
+      reHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.myReEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //行程安排修改插入图片
+      reArrHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.arrangeReEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //格式限制
+      handleEdiFormatError:function () {
+        this.$Message.warning('请选择格式为“jpg，jpeg，png，bmp”格式的图片！');
+      },
+      handleEdiBefore:function (file) {
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Message.warning('图片名过长！');
+        }
+        return len;
+      },
+      infoTypeChange:function (value) {
+        if (value === 0) {
+          this.isReMod = true;
+          this.isReCustom = false;
+          this.reviseData.xlInfoUrl = '';
+          this.reviseData.tvInfoUrl = '';
+        } else {
+          this.isReMod = false;
+          this.isReCustom = true;
+          this.reviseData.description = '';
+          this.reviseData.tvInfoUrl = '';
+        }
+      }
     }
   }
 </script>
@@ -1081,7 +1458,7 @@
       flex-direction: row;
       justify-content: flex-start;
       flex-wrap: wrap;
-      width: 550px;
+      width: 1050px;
     }
   }
   .add-detail{
@@ -1103,7 +1480,8 @@
     padding: 10px 0;
   }
   .detailWidth{
-    width: 500px;
+    width: 1000px;
+    padding: 10px 12px 10px 0;
   }
   .demo-upload-list{
     display: inline-block;
