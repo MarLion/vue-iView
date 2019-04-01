@@ -11,6 +11,11 @@ import navView from './components/public/nav/nav'
 import tabView from './components/public/tab/tab'
 import dialogView from './components/public/dialog/addDialog'
 import editorView from './components/public/editor/editor'
+import reEditorView from './components/public/editor/reviseEditor'
+import uploadView from './components/upload/upload'
+import reUploadView from './components/upload/reviseUpload'
+import videoView from './components/upload/video'
+import reVideoView from './components/upload/reviseVideo'
 import vueQuillEditor from 'vue-quill-editor'
 import 'iview/dist/styles/iview.css'
 import 'quill/dist/quill.core.css'
@@ -28,6 +33,11 @@ Vue.component('nav-view',navView);
 Vue.component('tab-view',tabView);
 Vue.component('add-view',dialogView);
 Vue.component('editor-view',editorView);
+Vue.component('revise-editor-view',reEditorView);
+Vue.component('upload-view',uploadView);
+Vue.component('revise-upload-view',reUploadView);
+Vue.component('video-view',videoView);
+Vue.component('revise-video-view',reVideoView);
 /* eslint-disable no-new */
 router.beforeEach((to,from,next) =>{
   store.state.admin_token = sessionStorage.getItem('userName');

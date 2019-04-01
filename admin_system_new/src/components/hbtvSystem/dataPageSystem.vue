@@ -8,9 +8,9 @@
         </div>
         <div class="data-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckStart" v-model="dataCheckedPra.createTimeStart" :options="begOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckStart" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckEnd" v-model="dataCheckedPra.createTimeEnd" :options="endOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="dataCheckEnd" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">活动名称：</span>
           <span><Input v-model="dataCheckedPra.name" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
@@ -31,7 +31,7 @@
     <Drawer
       title="发布相亲活动"
       v-model="value3"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close="clearDataDa"
@@ -46,6 +46,41 @@
       <div>
         <div class="add-form mt30">
           <div class="divs">
+            <p class="p">活动封面：</p>
+            <div class="add-image">
+              <div class="demo-upload-list mt10" v-for="item in coverUploadList">
+                <template v-if="item.status === 'finished'">
+                  <img :src="item.url">
+                  <div class="demo-upload-list-cover">
+                    <Icon type="ios-eye-outline" @click.native="handleCoverView(item.url)"></Icon>
+                    <Icon type="ios-trash-outline" @click.native="handleCoverRemove(item)"></Icon>
+                  </div>
+                </template>
+                <template v-else>
+                  <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+                </template>
+              </div>
+              <Upload :action='coverUploadUrl'
+                      ref="coverUpload"
+                      :show-upload-list="false"
+                      :on-success="handleCoverSuccess"
+                      :format="['jpg','jpeg','png','bmp']"
+                      :on-format-error="handleFormatError"
+                      :before-upload="handleCoverBeforeUpload"
+                      multiple
+                      type="drag"
+                      style="display: inline-block;width:100px;margin-top: 10px;">
+                <div style="width: 100px;height:100px;line-height: 100px;">
+                  <Icon type="ios-camera" size="40"></Icon>
+                </div>
+              </Upload>
+              <Modal title="查看封面" v-model="coverVisible">
+                <img :src= 'coverImgUrl' style="width: 100%">
+                <div slot="footer"></div>
+              </Modal>
+            </div>
+          </div>
+          <div class="divs mt30">
             <p class="p">上传照片：</p>
             <div class="add-image">
               <div class="demo-upload-list" v-for="item in uploadList">
@@ -80,14 +115,16 @@
               </Modal>
             </div>
           </div>
-          <Form :model="dataFormData" ref="dataForm" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-            <FormItem label="活动名称：" prop="name">
+          <Form :model="dataFormData" ref="dataForm" :rules="ruleValidate" :label-width="100" style="width: 100%;margin-top: 20px;">
+            <FormItem label="活动名称：" prop="name" style="width: 500px;">
               <Input type="text" v-model="dataFormData.name"></Input>
             </FormItem>
-            <FormItem label="活动费用：">
-              <InputNumber  v-model="dataFormData.price" :max="10000000" :min="0" @on-change="feeChanged" @on-blur="feeBlur" style="width: 80%;"></InputNumber><Checkbox v-model="isOpen" @on-change="freeChange" class="ml15">免费</Checkbox>
+            <FormItem label="活动费用：" style="width: 500px;">
+              <InputNumber  v-model="dataFormData.price" :max="10000000" :min="0" @on-change="feeChanged" @on-blur="feeBlur" style="width: 40%;"></InputNumber>
+              <Checkbox v-model="isOpen" @on-change="freeChange" class="ml15">免费</Checkbox>
+              <Checkbox v-model="dataFormData.isShowPay" true-value="1" false-value="0" class="ml15">是否显示支付按钮</Checkbox>
             </FormItem>
-            <FormItem label="开始时间：">
+            <FormItem label="开始时间：" style="width: 500px;">
               <Row>
                 <Col span="10">
                   <FormItem prop="activityStart">
@@ -101,7 +138,7 @@
                 </Col>
               </Row>
             </FormItem>
-            <FormItem label="结束时间：">
+            <FormItem label="结束时间：" style="width: 500px;">
               <Row>
                 <Col span="10">
                   <FormItem prop="activityEnd">
@@ -115,20 +152,56 @@
                 </Col>
               </Row>
             </FormItem>
-            <FormItem label="活动地址：" prop="address">
+            <FormItem label="活动地址：" prop="address" style="width: 500px;">
               <Input type="text" :maxlength="80" v-model="dataFormData.address"></Input>
             </FormItem>
-            <FormItem label="允许人数：" prop="num">
+            <FormItem label="允许人数：" prop="num" style="width: 500px;">
               <InputNumber v-model="dataFormData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
             </FormItem>
-            <FormItem label="参与方式：" prop="participate">
+            <FormItem label="参与方式：" prop="participate" style="width: 500px;">
               <Input type="text" :maxlength="50" v-model="dataFormData.participate"></Input>
             </FormItem>
-            <FormItem label="活动介绍：" prop="description">
-              <Input type="textarea" :maxlength="1000" v-model="dataFormData.description"></Input>
+            <FormItem label="活动介绍：">
+              <div class="editor-container">
+                <quill-editor
+                  ref="myEditor"
+                  v-model="dataFormData.description"
+                  :options="myOptions"
+                ></quill-editor>
+                <Upload
+                  :action="ediUploadUrl"
+                  ref="editorUpload"
+                  class="editorUp"
+                  :on-success="handleEdiSuccess"
+                  :format="['jpg','jpeg','png','bmp']"
+                  :on-format-error="handleEdiFormatError"
+                  :before-upload="handleEdiBefore"
+                  style="display: none"
+                >
+                  <Button>点击上传</Button>
+                </Upload>
+              </div>
             </FormItem>
-            <FormItem label="活动安排：" :maxlength="1000" prop="arrangement">
-              <Input type="textarea" v-model="dataFormData.arrangement"></Input>
+            <FormItem label="活动安排：">
+              <div class="editor-container">
+                <quill-editor
+                  ref="arrangeEditor"
+                  v-model="dataFormData.arrangement"
+                  :options="myArrOptions"
+                ></quill-editor>
+                <Upload
+                  :action="ediUploadUrl"
+                  ref="arrEditorUpload"
+                  class="arrEditorUp"
+                  :on-success="arrHandleEdiSuccess"
+                  :format="['jpg','jpeg','png','bmp']"
+                  :on-format-error="handleEdiFormatError"
+                  :before-upload="handleEdiBefore"
+                  style="display: none"
+                >
+                  <Button>点击上传</Button>
+                </Upload>
+              </div>
             </FormItem>
             <FormItem style="width: 200px!important;">
               <Button type="primary" @click="dataSubClick" :loading="dataSubLoading">发布活动</Button>
@@ -141,7 +214,7 @@
     <Drawer
       title="相亲活动详情"
       v-model="dataDetailValue"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close="clearDataDetail"
@@ -153,6 +226,19 @@
       </div>
       <div class="add-form mt30">
         <div class="divs">
+          <p class="p">活动封面：</p>
+          <div class="add-image">
+            <template v-if="dataDetailData.isCover">
+              <div class="demo-upload-list">
+                <img :src="dataDetailData.backgroundImage">
+              </div>
+            </template>
+            <template v-else>
+              <div class="demo-upload-list">暂无封面</div>
+            </template>
+          </div>
+        </div>
+        <div class="divs mt30">
           <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
           <div class="add-image">
             <template v-if="dataDetailData.isPhoto">
@@ -195,11 +281,11 @@
         </div>
         <div class="add-detail">
           <p class="p">活动介绍：</p>
-          <pre class="detailWidth">{{dataDetailData.ins}}</pre>
+          <p class="detailWidth" ref="des"></p>
         </div>
         <div class="add-detail">
           <p class="p">活动安排：</p>
-          <pre class="detailWidth">{{dataDetailData.arrange}}</pre>
+          <p class="detailWidth" ref="arrange"></p>
         </div>
       </div>
     </Drawer>
@@ -207,7 +293,7 @@
     <Drawer
       title="相亲活动修改"
       v-model="dataReviseValue"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close="clearDataRevise"
@@ -219,6 +305,42 @@
       </div>
       <div class="add-form mt30">
         <div class="divs">
+          <p class="p">活动封面：</p>
+          <div class="add-image">
+            <div class="demo-upload-list mt10" v-for="item in coverReUploadList">
+              <template v-if="item.status === 'finished'">
+                <img :src="item.url">
+                <div class="demo-upload-list-cover">
+                  <Icon type="ios-eye-outline" @click.native="handleCoverReView(item.url)"></Icon>
+                  <Icon type="ios-trash-outline" @click.native="handleCoverReRemove(item)"></Icon>
+                </div>
+              </template>
+              <template v-else>
+                <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+              </template>
+            </div>
+            <Upload :action='coverUploadUrl'
+                    ref="coverReUpload"
+                    :show-upload-list="false"
+                    :default-file-list="reviseCoverDefaultList"
+                    :on-success="handleCoverReSuccess"
+                    :format="['jpg','jpeg','png','bmp']"
+                    :on-format-error="handleFormatError"
+                    :before-upload="handleCoverReBeforeUpload"
+                    multiple
+                    type="drag"
+                    style="display: inline-block;width:100px;margin-top: 10px;">
+              <div style="width: 100px;height:100px;line-height: 100px;">
+                <Icon type="ios-camera" size="40"></Icon>
+              </div>
+            </Upload>
+            <Modal title="查看封面" v-model="coverReVisible">
+              <img :src= 'coverReImgUrl' style="width: 100%">
+              <div slot="footer"></div>
+            </Modal>
+          </div>
+        </div>
+        <div class="divs mt30">
           <p class="p">上传照片：</p>
           <div class="add-image">
             <div class="demo-upload-list" v-for="item in dataUploadReviseList">
@@ -254,14 +376,16 @@
             </Modal>
           </div>
         </div>
-        <Form :model="dataReviseData" ref="dataReviseForm" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="活动名称：" prop="name">
+        <Form :model="dataReviseData" ref="dataReviseForm" :rules="ruleValidate" :label-width="100" style="width: 100%;margin-top: 20px;">
+          <FormItem label="活动名称：" prop="name" style="width: 500px;">
             <Input type="text" v-model="dataReviseData.name"></Input>
           </FormItem>
-          <FormItem label="活动费用：">
-            <InputNumber v-model="dataReviseData.price" :max="10000000" :min="0" @on-change="reFeeChange" @on-blur="reFeeBluer" style="width: 80%;"></InputNumber><Checkbox v-model="isReviseOpen" @on-change="reFreeChange" class="ml15">免费</Checkbox>
+          <FormItem label="活动费用：" style="width: 500px;">
+            <InputNumber v-model="dataReviseData.price" :max="10000000" :min="0" @on-change="reFeeChange" @on-blur="reFeeBluer" style="width: 40%;"></InputNumber>
+            <Checkbox v-model="isReviseOpen" @on-change="reFreeChange" class="ml15">免费</Checkbox>
+            <Checkbox v-model="dataReviseData.isShowPay" true-value="1" false-value="0" class="ml15">是否显示支付按钮</Checkbox>
           </FormItem>
-          <FormItem label="开始时间：">
+          <FormItem label="开始时间：" style="width: 500px;">
             <Row>
               <Col span="10">
                 <FormItem prop="activityStart">
@@ -275,7 +399,7 @@
               </Col>
             </Row>
           </FormItem>
-          <FormItem label="结束时间：">
+          <FormItem label="结束时间：" style="width: 500px;">
             <Row>
               <Col span="10">
                 <FormItem prop="activityEnd">
@@ -289,20 +413,56 @@
               </Col>
             </Row>
           </FormItem>
-          <FormItem label="活动地址："  prop="address">
+          <FormItem label="活动地址："  prop="address" style="width: 500px;">
             <Input type="text" :maxlength="80" v-model="dataReviseData.address"></Input>
           </FormItem>
-          <FormItem label="允许人数：" prop="num">
+          <FormItem label="允许人数：" prop="num" style="width: 500px;">
             <InputNumber v-model="dataReviseData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
-          <FormItem label="参与方式：" prop="participate">
+          <FormItem label="参与方式：" prop="participate" style="width: 500px;">
             <Input type="text" :maxlength="50" v-model="dataReviseData.participate"></Input>
           </FormItem>
-          <FormItem label="活动介绍：" prop="description">
-            <Input type="textarea" :maxlength="1000" v-model="dataReviseData.description"></Input>
+          <FormItem label="活动介绍：">
+            <div class="editor-container">
+              <quill-editor
+                ref="myReEditor"
+                v-model="dataReviseData.description"
+                :options="myReOptions"
+              ></quill-editor>
+              <Upload
+                :action="ediUploadUrl"
+                ref="editorReUpload"
+                class="editorReUp"
+                :on-success="reHandleEdiSuccess"
+                :format="['jpg','jpeg','png','bmp']"
+                :on-format-error="handleEdiFormatError"
+                :before-upload="handleEdiBefore"
+                style="display: none"
+              >
+                <Button>点击上传</Button>
+              </Upload>
+            </div>
           </FormItem>
-          <FormItem label="活动安排：" prop="arrangement">
-            <Input type="textarea" :maxlength="1000" v-model="dataReviseData.arrangement"></Input>
+          <FormItem label="活动安排：">
+            <div class="editor-container">
+              <quill-editor
+                ref="arrangeReEditor"
+                v-model="dataReviseData.arrangement"
+                :options="myArrReOptions"
+              ></quill-editor>
+              <Upload
+                :action="ediUploadUrl"
+                ref="arrEditorReUpload"
+                class="arrEditorReUp"
+                :on-success="reArrHandleEdiSuccess"
+                :format="['jpg','jpeg','png','bmp']"
+                :on-format-error="handleEdiFormatError"
+                :before-upload="handleEdiBefore"
+                style="display: none"
+              >
+                <Button>点击上传</Button>
+              </Upload>
+            </div>
           </FormItem>
           <FormItem style="width: 200px!important;">
             <Button type="primary" @click="dataReviseClick" :loading="dataReviseLoading">确认修改</Button>
@@ -310,6 +470,21 @@
         </Form>
       </div>
     </Drawer>
+    <!--填写推送消息-->
+    <Modal
+      v-model="isPropel"
+      :loading="propelLoading"
+      :mask-closable="false"
+      title="推送消息"
+      @on-ok="proSub"
+      @on-visible-change="isProVisible"
+    >
+      <Form :model="proFormData" ref="proForm" :rules="ruleValidatePro" :label-width="100" class="mt20">
+        <FormItem label="消息内容：" prop="message">
+          <Input type="textarea" v-model="proFormData.message"></Input>
+        </FormItem>
+      </Form>
+    </Modal>
     <Modal
       title="提示"
       v-model="dataTip"
@@ -338,6 +513,33 @@
 <script>
   import axios from "@/axios/axios";
   import * as base from '../../axios/base';
+  import { quillEditor } from 'vue-quill-editor';
+  import * as Quill from 'quill';
+  import index from "@/router";
+  const fonts = ['SimSun', 'SimHei','Microsoft-YaHei','KaiTi','FangSong','Arial','Times-New-Roman','sans-serif'];
+  const Font = Quill.import('formats/font');
+  Font.whitelist = fonts; //将字体加入到白名单
+  Quill.register(Font, true);
+  const toolbarOptions= [
+    ['bold', 'italic', 'underline', 'strike'],
+    ['blockquote', 'code-block'],
+
+    [{ 'header': 1 }, { 'header': 2 }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'script': 'sub'}, { 'script': 'super' }],
+    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'direction': 'rtl' }],
+
+    [{ 'size': ['small', false, 'large', 'huge'] }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'font': fonts }],
+    [{ 'align': [] }],
+
+    ['clean'],
+    ['link','image']
+  ];
   export default {
     name: "dataPageSystem",
     data () {
@@ -413,7 +615,11 @@
         }
       };
       return {
-        uploadUrl:base.baseUrl.serviceOne + 'column_activity/saveFile',
+        coverUploadUrl:base.baseUrl.serviceOne + 'lifeTrend/saveFiles',//封面图上传接口
+        uploadUrl:base.baseUrl.serviceOne + 'column_activity/saveFile',//图片上传接口
+        ediUploadUrl:base.baseUrl.serviceOne + 'gift/saveGiftFile',//编辑器插入图片上传接口 和礼物配置一个接口
+        isPropel:false,
+        propelLoading:true,
         value3:false,
         dataReviseValue:false,
         dataDetailValue:false,
@@ -535,7 +741,7 @@
             title:'操作选项',
             key:'action',
             align:'center',
-            width:260,
+            width:300,
             render:(h,params) => {
               if (params.row.status === 0) {
                 return h('div', [
@@ -610,7 +816,24 @@
                         this.$router.push({path:'/dataSignList',query:{activityId:params.row.id}})
                       }
                     }
-                  }, '报名清单')
+                  }, '报名清单'),
+                  h('Button', {
+                    props: {
+                      type: 'success',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        this.proFormData.activityId = params.row.id;
+                        //this.proFormData.webUrl = 'http://yys.zhongwei-info.com:8001/blindDateApp/view/tvActiveInfo/h5_matchmaker_tvActiveInfo.html?id='+params.row.id+'&actType=2&articleType=7&fromHome=2';
+                        this.proFormData.webUrl = 'http://192.168.1.197:8888/blindDateApp/view/tvActiveInfo/h5_matchmaker_tvActiveInfo.html?id='+params.row.id+'&actType=2&articleType=7&fromHome=2';
+                        this.isPropel = true;
+                      }
+                    }
+                  }, '推送'),
                 ])
               } else if (params.row.status === 1) {
                 return h('div', [
@@ -646,6 +869,9 @@
         //新增data
         defaultList:[],
         uploadList:[],
+        coverUploadList:[],
+        coverVisible:false,
+        coverImgUrl:'',
         dataImgUrl:'',
         visible:false,
         isFree:false,
@@ -663,10 +889,14 @@
           participate:'',
           description:'',
           arrangement:'',
-          filePath:[]
+          filePath:[],
+          backgroundImage:'',
+          isShowPay:'0'
         },
         //详情data
         dataDetailData:{
+          isCover:false,
+          backgroundImage:'',
           dataDetailUploadList:[],
           isPhoto:true,
           name:'',
@@ -681,8 +911,13 @@
         },
         //修改data
         dataReviseVisible:false,
+        coverReVisible:false,
         dataReviseDefault:[],
         dataUploadReviseList:[],
+        coverReUploadList:[],
+        reviseCoverDefaultList:[],
+        reviseImgUrl:'',
+        coverReImgUrl:'',
         dataReviseImgUrl:'',
         isReviseOpen:true,
         dataReviseId:'',
@@ -701,7 +936,20 @@
           arrangement:'',
           filePath:[],
           delFilePath:[],
-          id:''
+          backgroundImage:'',
+          delBackgroundImage:'',
+          id:'',
+          isShowPay:'0'
+        },
+        proFormData:{
+          activityId:'',
+          message:'',
+          webUrl:''
+        },
+        ruleValidatePro:{
+          message:[
+            {required:true,message:'请填写信息内容'}
+          ]
         },
         //表单验证
         ruleValidate:{
@@ -735,12 +983,87 @@
           activityClockEnd:[
             {validator:validateActivityClockEnd}
           ]
-        }
+        },
+        //活动介绍 活动安排编辑器
+        myOptions:{
+          placeholder:'请编写活动介绍',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.editorUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        myArrOptions:{
+          placeholder:'请编写活动安排',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.arrEditorUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        //活动介绍 活动安排修改编辑器option
+        myReOptions:{
+          placeholder:'请编写活动介绍',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.editorReUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        myArrReOptions:{
+          placeholder:'请编写活动安排',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.arrEditorReUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
       }
     },
     mounted () {
       this.getDataList();
       this.uploadList = this.$refs.dataUpload.fileList;
+      this.coverUploadList = this.$refs.coverUpload.fileList;
     },
     methods:{
       checkClickData:function () {
@@ -817,7 +1140,6 @@
         }
       },
       handleSuccess:function (res,file,fileList) {
-        //console.log(JSON.stringify(file));
         if (res.code === 200) {
           file.url = res.result[0].filePath;
         } else {
@@ -908,8 +1230,15 @@
       getDataActivityDetaik:function (id) {
         axios.BlindDateDetail({id:id})
           .then(res => {
-            console.log(res);
+            //console.log(res);
             if (res.code === 200) {
+              if (res.result.backgroundImage != null && res.result.backgroundImage !== "" ) {
+                this.dataDetailData.isCover = true;
+                this.dataDetailData.backgroundImage = res.result.backgroundImage;
+              } else {
+                this.dataDetailData.backgroundImage = '';
+                this.dataDetailData.isCover = false;
+              }
               if (res.result.filePaths != null && res.result.filePaths !== ""){
                 this.dataDetailData.isPhoto = true;
                 this.dataDetailData.dataDetailUploadList = res.result.filePaths.split(',');
@@ -926,6 +1255,8 @@
               this.dataDetailData.participate = res.result.participate;
               this.dataDetailData.ins = res.result.description;
               this.dataDetailData.arrange = res.result.arrangement;
+              this.$refs.des.innerHTML = this.dataDetailData.ins;
+              this.$refs.arrange.innerHTML = this.dataDetailData.arrange;
               this.dataDetailValue = true;
             } else {
               this.dataTip = true;
@@ -942,8 +1273,15 @@
       getReviseMessage:function (id) {
         axios.BlindDateDetail({id:id})
           .then(res => {
-            //console.log(res);
+            console.log(res);
             if (res.code === 200) {
+              if (res.result.backgroundImage != null && res.result.backgroundImage !== "" ) {
+                this.reviseCoverDefaultList.push({url:res.result.backgroundImage});
+              } else {
+                this.reviseCoverDefaultList = [];
+              }
+              this.$refs.coverReUpload.fileList = this.reviseCoverDefaultList;
+              this.coverReUploadList = this.$refs.coverReUpload.fileList;
               if (res.result.filePaths != null && res.result.filePaths !== "") {
                 let arr = res.result.filePaths.split(',');
                 arr.forEach((item,index) => {
@@ -956,8 +1294,8 @@
               this.dataUploadReviseList = this.$refs.dataReviseUpload.fileList;
               this.dataReviseData.name = res.result.name;
               this.dataReviseData.price = res.result.price;
+              this.dataReviseData.isShowPay = res.result.isShowPay.toString();
               this.dataReviseData.activityStart = res.result.activityStart.split(' ')[0];
-              //activityStartHms activityEndHms
               this.dataReviseData.activityStartHms = res.result.activityStart.split(' ')[1];
               this.dataReviseData.activityEnd = res.result.activityEnd.split(' ')[0];
               this.dataReviseData.activityEndHms = res.result.activityEnd.split(' ')[1];
@@ -1005,6 +1343,9 @@
         this.dataReviseData.activityEnd = this.$trans.timeTranslate(this.dataReviseData.activityEnd);
         this.$refs.dataReviseForm.validate(valid => {
           if (valid) {
+            this.coverReUploadList.forEach( item => {
+              this.dataReviseData.backgroundImage = item.url;
+            });
             this.dataUploadReviseList.forEach(item => {
               this.dataReviseData.filePath .push(item.url);
             });
@@ -1099,13 +1440,21 @@
         this.dataFormData.filePath = [];
         this.$refs.dataUpload.clearFiles();
         this.uploadList = this.$refs.dataUpload.fileList;
+        this.$refs.coverUpload.clearFiles();
+        this.coverUploadList = this.$refs.coverUpload.fileList;
+        this.dataFormData.backgroundImage = '';
         this.$refs.dataForm.resetFields();
         this.dataFormData.price = 0;
         this.isOpen = true;
         this.dataFormData.activityStartHms = '';
         this.dataFormData.activityEndHms = '';
+        this.dataFormData.description = '';
+        this.dataFormData.arrangement = '';
+        this.dataFormData.isShowPay = '0';
       },
       clearDataDetail:function () {
+        this.dataDetailData.isCover= true;
+        this.dataDetailData.backgroundImage = '';
         this.dataDetailData.dataDetailUploadList = [];
         this.dataDetailData.isPhoto = true;
         this.dataDetailData.name = '';
@@ -1121,16 +1470,220 @@
         //清空图片
         this.$refs.dataReviseUpload.clearFiles();
         this.dataUploadReviseList = this.$refs.dataReviseUpload.fileList;
+        this.$refs.coverReUpload.clearFiles();
+        this.coverReUploadList = this.$refs.coverReUpload.fileList;
         //清空表单
         this.$refs.dataReviseForm.resetFields();
         this.dataReviseData.price = null;
         this.isReviseOpen = true;
         this.dataReviseDefault = [];
+        this.reviseCoverDefaultList = [];
+        this.coverReImgUrl = '';
         this.dataReviseImgUrl = '';
         this.dataReviseId = '';
         this.dataReviseData.filePath = [];
         this.dataReviseData.delFilePath = [];
-      }
+        this.dataReviseData.description = '';
+        this.dataReviseData.arrangement = '';
+        this.dataReviseData.isShowPay = '0';
+      },
+      //封面专区
+      //新增
+      handleCoverView:function (url) {
+        this.coverVisible = true;
+        this.coverImgUrl = url;
+      },
+      handleCoverRemove:function (file) {
+        //删除之后 把封面图字段清空
+        axios.BlindDataCoverDelete({backgroundImage:file.url})
+          .then(res => {
+            const fileList = this.$refs.coverUpload.fileList;
+            this.$refs.coverUpload.fileList.splice(fileList.indexOf(file), 1);
+            this.dataFormData.backgroundImage =  '';
+          })
+          .catch(error => {
+            console.log(error);
+            this.loginFail = true;
+            this.$refs.failTip.innerHTML = '删除失败！'
+          });
+      },
+      handleCoverSuccess:function (res,file,fileList) {
+        //console.log(res);
+        if (res.code === 200) {
+          file.url = res.result.filePath;
+          //只能上传一张封面 可以在这里对字段赋值
+          this.dataFormData.backgroundImage =  res.result.filePath;
+        } else {
+          this.loginFail = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
+      },
+      handleCoverBeforeUpload:function (file) {
+        const check = this.coverUploadList.length < 1;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '只能上传1张封面！'
+          });
+          return check;
+        }
+      },
+      //修改
+      handleCoverReView:function (url) {
+        this.coverReVisible = true;
+        this.coverReImgUrl = url;
+      },
+      handleCoverReRemove:function (file) {
+        const fileList = this.$refs.coverReUpload.fileList;
+        this.$refs.coverReUpload.fileList.splice(fileList.indexOf(file), 1);
+        this.coverReUploadList = this.$refs.coverReUpload.fileList;
+        this.dataReviseData.backgroundImage = '';
+        this.dataReviseData.delBackgroundImage = file.url;
+      },
+      handleCoverReSuccess:function (res,file,fileList) {
+        console.log(res);
+        if (res.code === 200) {
+          file.url = res.result.filePath;
+          this.coverReUploadList = fileList;
+        } else {
+          this.loginFail = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
+      },
+      handleCoverReBeforeUpload:function (file) {
+        const check = this.coverReUploadList.length < 1;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '只能上传1张封面！'
+          });
+          return check;
+        }
+      },
+      //富文本编辑器
+      //景区介绍编辑器上传图片
+      handleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.myEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //行程安排编辑器上传图片
+      arrHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.arrangeEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //活动介绍修改插入图片
+      reHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.myReEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //活动安排修改插入图片
+      reArrHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.arrangeReEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //格式限制
+      handleEdiFormatError:function () {
+        this.$Message.warning('请选择格式为“jpg，jpeg，png，bmp”格式的图片！');
+      },
+      handleEdiBefore:function (file) {
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Message.warning('图片名过长！');
+        }
+        return len;
+      },
+      proSub:function () {
+        this.$refs.proForm.validate(valid => {
+          if (valid) {
+            axios.PropelTvActivity(this.proFormData)
+              .then(res => {
+                //console.log(res);
+                if (res.code === '0') {
+                  this.isPropel = false;
+                  this.dataTip = true;
+                  this.$refs.failTip.innerHTML = '推送成功！';
+                } else {
+                  this.changModal();
+                  this.dataTip = true;
+                  this.$refs.failTip.innerHTML = '推送失败！';
+                }
+              })
+              .catch(error => {
+                console.log(error);
+                this.changModal();
+                this.dataTip = true;
+                this.$refs.failTip.innerHTML = '推送失败！';
+              })
+          } else {
+            this.changModal();
+          }
+        });
+      },
+      isProVisible:function (value) {
+        if (!value) {
+          this.proFormData.activityId = '';
+          this.proFormData.webUrl = '';
+          this.$refs.proForm.resetFields();
+        }
+      },
+      changModal:function () {
+        this.propelLoading = false;
+        this.$nextTick(() => {
+          this.propelLoading = true;
+        });
+      },
     }
   }
 </script>
@@ -1204,6 +1757,7 @@
   }
   .detailWidth{
     width: 500px;
+    padding: 10px 12px 10px 0;
   }
   .demo-upload-list{
     display: inline-block;

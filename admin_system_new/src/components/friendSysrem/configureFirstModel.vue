@@ -22,7 +22,7 @@
     >
       <Form :model="firFormData" ref="firForm" :rules="ruleValidate" :label-width="100">
         <FormItem label="模块名称：" prop="name">
-          <Input type="text" v-model="firFormData.name"></Input>
+          <Input type="text" v-model="firFormData.name" :maxlength="10"></Input>
         </FormItem>
         <FormItem label="所属模块：">
           <div class="configure-container">
@@ -34,14 +34,6 @@
                 </Radio>
               </Radio>
             </RadioGroup>
-            <!--<dl v-for="item in existModal" :key="item.id">-->
-              <!--<dt>-->
-                <!--<Checkbox><Icon type="ios-arrow-down"></Icon>{{item.name}}</Checkbox>-->
-              <!--</dt>-->
-              <!--<dd v-for="it in item.levelDtoList" :key="it.id" class="mt10">-->
-                <!--<Checkbox>{{it.name}}</Checkbox>-->
-              <!--</dd>-->
-            <!--</dl>-->
           </div>
         </FormItem>
         <FormItem label="模块封面：">
@@ -99,9 +91,9 @@
         <FormItem label="所属模块：">
           <div class="configure-container">
             <RadioGroup v-model="firReFormData.parentId" vertical>
-              <Radio v-for="item in existModal" :key="item.id" :label="item.id" class="ml30">
+              <Radio v-for="item in existModal" :key="item.id" :label="item.id" class="ml30" :disabled="item.hasArticle || item.parentId === 0">
                 <Icon type="ios-arrow-down"></Icon>{{item.name}}
-                <Radio v-for="it in item.levelDtoList" :key="it.id" :label="it.id" class="ml15">
+                <Radio v-for="it in item.levelDtoList" :key="it.id" :label="it.id" class="ml15" disabled>
                   {{it.name}}
                 </Radio>
               </Radio>
@@ -524,7 +516,7 @@
       getExistModal:function (id) {
         axios.ModalExist({type:1,id:id})
           .then(res => {
-            console.log(res);
+            //console.log(res);
             if (res.code === '0') {
               this.existModal = res.data;
             } else {
@@ -545,7 +537,6 @@
         this.getExistModal('');
       },
       modelPageChange:function (page) {
-        //console.log(page);
         this.listParams.page = page;
         this.getModalList();
       },
@@ -587,7 +578,6 @@
       firClick:function () {
         this.$refs.firForm.validate(valid => {
           if (valid) {
-            //console.log(this.firFormData);
             this.dataLoading = true;
             axios.ModalAdd(this.firFormData)
               .then(res => {
@@ -623,9 +613,11 @@
         this.firReFormData.backPic = '';
       },
       handleReSuccess:function (res,file,fileList) {
+        //console.log(res);
         if (res.code === '0') {
           file.url = res.data;
           this.firReFormData.backPic = res.data;
+          this.reUploadList = fileList;
         } else {
           this.modalTip = true;
           this.$refs.modalTip.innerHTML = '图片修改出错！'
@@ -649,7 +641,7 @@
             this.dataLoading = true;
             axios.ModalAdd(this.firReFormData).
               then(res => {
-                console.log(res);
+              //console.log(res);
               this.dataLoading = false;
                 if (res.code === '0') {
                   this.resetReFirForm();
@@ -720,10 +712,6 @@
     flex-direction: row;
     justify-content: flex-start;
     flex-wrap: wrap;
-    //padding:  0 30px;
-    //height: 550px;
-    //border: 1px solid #cccccc;
-    //overflow-y: scroll;
     dl{
       margin-left: 30px;
       dd{
@@ -736,7 +724,6 @@
     height: auto;
   }
   .article{
-    //text-align: left;
     text-indent: 2em;
     img{
       text-align:center

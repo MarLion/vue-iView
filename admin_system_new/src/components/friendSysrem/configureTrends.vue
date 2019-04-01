@@ -125,8 +125,8 @@
             <Option v-for="(item,index) in addTypeList" :value="item.value" :key="index">{{ item.label }}</Option>
           </Select>
         </FormItem>
-        <FormItem label="玄乐账号：" prop="userId" v-if="isId">
-          <Input type="text" v-model="trendFormData.userId" style="width: 400px;"></Input>
+        <FormItem label="玄乐账号：" prop="loginName" v-if="isId">
+          <Input type="text" v-model="trendFormData.loginName" style="width: 400px;"></Input>
         </FormItem>
         <!--<FormItem label="地理信息：" prop="city">-->
           <!--<Select v-model="trendFormData.city" style="width:400px">-->
@@ -155,6 +155,21 @@
         </FormItem>
       </Form>
     </Drawer>
+    <!--编辑-->
+    <Modal
+      v-model="isEdit"
+      :loading="editLoading"
+      :mask-closable="false"
+      title="编辑动态内容"
+      @on-ok="editSub"
+      @on-visible-change="isEditVisible"
+    >
+      <Form :model="editFormData" ref="editForm" :label-width="80" class="mt20">
+        <FormItem label="编辑内容：" prop="content">
+          <Input type="textarea" v-model="editFormData.content"></Input>
+        </FormItem>
+      </Form>
+    </Modal>
     <Modal
       title="提示"
       v-model="trendTip"
@@ -192,6 +207,8 @@
         trendTip:false,
         trendSuccess:false,
         bigVideo:false,
+        isEdit:false,
+        editLoading:true,
         videoUrl:'',
         styles: {
           height: 'calc(100% - 55px)',
@@ -267,11 +284,11 @@
             width: 60,
             align: 'center'
           },
-          {
-            title:'用户编号',
-            key:'userId',
-            align:'center'
-          },
+          // {
+          //   title:'用户编号',
+          //   key:'userId',
+          //   align:'center'
+          // },
           {
             title:'用户姓名',
             key:'name',
@@ -339,8 +356,8 @@
           },
           {
             title:'操作选项',
-            align:'center',
-            width:250,
+            align:'left',
+            width:330,
             render:(h,params) => {
               const checkVideo = h('Button',{
                 props:{
@@ -453,7 +470,54 @@
                   }
                 }
               },'取消置顶');
-              if (params.row.trendType === 1) {
+              //删除和修改只针对系统动态
+              const revise = h('Button',{
+                props:{
+                  type: 'info',
+                  size: 'small'
+                },
+                style:{
+                  marginRight:'5px'
+                },
+                on:{
+                  click:() => {
+                    this.isEdit = true;
+                    this.editFormData.id = params.row.id;
+                    this.editFormData.content = params.row.description;
+                  }
+                }
+              },'编辑');
+              const deletes = h('Button',{
+                props:{
+                  type: 'error',
+                  size: 'small'
+                },
+                style:{
+                  marginRight:'5px'
+                },
+                on:{
+                  click:() => {
+                    axios.TrendDelete({id:params.row.id})
+                      .then(res => {
+                        //console.log(res);
+                        if (res.code === '0') {
+                          this.trendTip = true;
+                          this.$refs.trendTip.innerHTML = '删除成功！';
+                          this.getTrendList();
+                        } else {
+                          this.trendTip = true;
+                          this.$refs.trendTip.innerHTML = '删除失败！';
+                        }
+                      })
+                      .catch(error => {
+                        console.log(error);
+                        this.trendTip = true;
+                        this.$refs.trendTip.innerHTML = '操作失败！';
+                      })
+                  }
+                }
+              },'删除');
+              if (params.row.trendType === 1) {  //0 系统动态 1 用户动态 2 红娘动态
                 if (params.row.status === 1) {
                   return h('div',[
                     hidden,
@@ -465,7 +529,7 @@
                     checkVideo
                   ])
                 }
-              } else {
+              } else if (params.row.trendType === 2) {
                 if (params.row.status === 1 && params.row.showTop === 0) {
                   return h('div',[
                     hidden,
@@ -491,6 +555,40 @@
                     checkVideo
                   ])
                 }
+              } else {
+                if (params.row.status === 1 && params.row.showTop === 0) {
+                  return h('div',[
+                    hidden,
+                    stick,
+                    checkVideo,
+                    revise,
+                    deletes
+                  ])
+                } else if (params.row.status === 1 && params.row.showTop === 1) {
+                  return h('div',[
+                    hidden,
+                    cancelStick,
+                    checkVideo,
+                    revise,
+                    deletes
+                  ])
+                } else if (params.row.status === 0 && params.row.showTop === 0) {
+                  return h('div',[
+                    hasHidden,
+                    stick,
+                    checkVideo,
+                    revise,
+                    deletes
+                  ])
+                } else if (params.row.status === 0 && params.row.showTop === 1) {
+                  return h('div',[
+                    hasHidden,
+                    cancelStick,
+                    checkVideo,
+                    revise,
+                    deletes
+                  ])
+                }
               }
             }
           },
@@ -508,7 +606,7 @@
         videoUploadList:[],
         trendFormData:{
           trendType:'',//动态类型
-          userId:'',//用户id 红娘或者用户动态时必填
+          loginName:'',//用户id 红娘或者用户动态时必填
           city:'',//地理信息
           status:'1',//是否隐藏
           showTop:'0',//是否置顶
@@ -519,11 +617,11 @@
         },
         addTypeList:[
           {
-            value:2,
+            value:1,
             label:'用户动态'
           },
           {
-            value:1,
+            value:2,
             label:'红娘动态'
           },
           {
@@ -531,6 +629,11 @@
             label:'系统动态'
           }
         ],
+        //编辑内容
+        editFormData:{
+          id:'',
+          content:'',
+        },
         positionList:[],
         ruleValidate:{
 
@@ -547,7 +650,7 @@
         this.loading = true;
         axios.TrendList(this.listParams)
           .then(res => {
-            console.log(res);
+            //console.log(JSON.stringify(res.result.list[0]));
             if (res.code === 200) {
               this.loading = false;
               this.listData = res.result.list;
@@ -572,13 +675,11 @@
         this.getTrendList();
       },
       trendPageChange:function (page) {
-        //console.log(page);
         this.listParams.pageNum = page;
         this.getTrendList();
       },
       dataCheckStart:function (date) {
         this.listParams.createTimeStart = date;
-        //console.log(this.listParams.createTimeStart);
       },
       //获取地理位置
       getPosition:function () {
@@ -605,7 +706,7 @@
           this.isStick = false;
         } else if (value === 1) {
           this.isId = true;
-          this.isStick = true;
+          this.isStick = false;
         } else {
           this.isId = false;
           this.isStick = true;
@@ -706,7 +807,7 @@
                this.trendFormData.videoBackImageUrl = this.uploadList[index].url;
              })
             }
-            console.log(JSON.stringify(this.trendFormData));
+            //console.log(JSON.stringify(this.trendFormData));
             axios.TrendAdd(this.trendFormData)
               .then(res => {
                 //console.log(res);
@@ -758,7 +859,39 @@
         if (!value) {
           this.addVideoUrl = '';
         }
-      }
+      },
+      editSub:function () {
+        axios.TrendContentEdit(this.editFormData)
+          .then(res => {
+            //console.log(res);
+            if (res.code === '0') {
+              this.isEdit = false;
+              this.trendTip = true;
+              this.$refs.trendTip.innerHTML = res.data;
+              this.getTrendList();
+            } else {
+              this.$Message.error('修改失败！');
+              this.changModal();
+            }
+          })
+          .catch(error => {
+            console.log(error);
+            this.$Message.error('修改失败！');
+            this.changModal();
+          })
+      },
+      isEditVisible:function (value) {
+        if (!value) {
+          this.editFormData.id = '';
+          this.editFormData.content = '';
+        }
+      },
+      changModal:function () {
+        this.editLoading = false;
+        this.$nextTick(() => {
+          this.editLoading = true;
+        });
+      },
     }
   }
 </script>

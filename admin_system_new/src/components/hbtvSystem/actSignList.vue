@@ -15,7 +15,7 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10" :loading="cancelLoading" @click="batchCancelSign(actBatchUser,actBatchType)">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" :loading="cancelLoading" @click="batchCancelSign(actBatchUser,actBatchType,actSignParams.programId)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
@@ -149,7 +149,7 @@
                     },
                     on: {
                       click: () => {
-                        this.batchCancelSign(params.row.id,params.row.userType);
+                        this.batchCancelSign(params.row.id,params.row.userType,this.actSignParams.programId);
                       }
                     }
                   }, '取消资格')
@@ -209,13 +209,13 @@
         this.actBatchUser = arr.join(',');
         this.actBatchType = typeArr.join(',');
       },
-      batchCancelSign:function (id,type) { //取消资格
+      batchCancelSign:function (id,type,itemId) { //取消资格
         if (id === '') {
           this.actSignTip = true;
           this.$refs.actSignTip.innerHTML = '请至少勾选一名用户！';
         } else {
           this.cancelLoading = true;
-          axios.ActSignCancel({userIds:id,userType:type})
+          axios.ActSignCancel({userIds:id,userType:type,itemId:itemId})
             .then(res => {
               this.cancelLoading = false;
               if (res.data === '0') {

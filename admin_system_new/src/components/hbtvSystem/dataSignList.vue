@@ -15,7 +15,7 @@
     <div class="list-fun mt20">
       <div class="list-ope">
         <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-        <Button icon="ios-cash" type="info" class="ml10" :loading="cancelLoading" @click="cancelRight(batchUser,batchType)">批量取消</Button>
+        <Button icon="ios-cash" type="info" class="ml10" :loading="cancelLoading" @click="cancelRight(batchUser,batchType,listParams.activityId)">批量取消</Button>
       </div>
       <div class="list-search">
         <span class="ml15">报名日期从：</span>
@@ -149,7 +149,7 @@
                     },
                     on: {
                       click: () => {
-                        this.cancelRight(params.row.id,params.row.userType);
+                        this.cancelRight(params.row.id,params.row.userType,this.listParams.activityId);
                       }
                     }
                   }, '取消资格')
@@ -204,13 +204,13 @@
         this.batchType = typeArr.join(',');
         //console.log(this.batchUser);
       },
-      cancelRight:function (id,type) {
+      cancelRight:function (id,type,itemId) {
         if (id === '') {
           this.cancelTip = true;
           this.$refs.cancelTip.innerHTML = '请至少勾选一名用户！';
         } else {
           this.cancelLoading = true;
-          axios.BlindDateCancelEn({userIds:id,userType:type})
+          axios.BlindDateCancelEn({userIds:id,userType:type,itemId:itemId})
             .then(res => {
               //console.log(res);
               this.cancelLoading = false;

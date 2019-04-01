@@ -145,7 +145,7 @@
                     },
                     on: {
                       click: () => {
-                        axios.CancleTourEn({tourUserId:params.row.id})
+                        axios.CancleTourEn({tourUserId:params.row.id,itemId:this.queryId})
                           .then(res => {
                             console.log(res);
                             if (res.data === "0") {
@@ -215,14 +215,11 @@
         this.getEnlist();
       },
       changeSelect:function (selection) {
-        //console.log(selection);
         let idArr = [];
         selection.forEach(item => {
           idArr.push(item.id);
         });
-        //console.log(idArr);
         this.batchStr = idArr.join(',');
-        //console.log(this.batchStr);
       },
       cancelBatch:function () {
         if (this.batchStr == "") {
@@ -230,7 +227,7 @@
           this.$refs.cancelTip.innerHTML = '请至少勾选一名人员！';
         } else {
           this.canceling = true;
-          axios.CancleTourEnBatch({tourUserIds:this.batchStr})
+          axios.CancleTourEnBatch({tourUserIds:this.batchStr,itemId:this.queryId})
             .then(res => {
               //console.log(res);
               this.canceling = false;

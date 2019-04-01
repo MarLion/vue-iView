@@ -231,7 +231,6 @@
                   on:{
                     click : () => {
                       //手动设置一下status
-                      //console.log(params.row.filePath);
                       this.dataDefault.push({url:params.row.filePath,name:params.row.name,status:'finished'});
                       this.$refs.giftReviseUpload.fileList = this.dataDefault;
                       this.reviseUploadList = this.$refs.giftReviseUpload.fileList;

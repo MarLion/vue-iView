@@ -187,7 +187,7 @@
         this.loading= true;
         axios.TicketSignList(this.signParam)
           .then(res => {
-            console.log(res.result.list);
+            //console.log(res.result.list);
             if (res.code === 200) {
               this.loading = false;
               this.listData = res.result.list;

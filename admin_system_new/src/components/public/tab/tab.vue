@@ -39,7 +39,7 @@
         if (this.$store.state.tabList.length > 0){
           this.$router.push({path :this.$store.state.activeTab})
         } else {
-          this.$router.push({path :'/welcome'})
+          this.$router.push({path :'/welcomeNoRight'})
         }
       },
       tabClick : function (name) {

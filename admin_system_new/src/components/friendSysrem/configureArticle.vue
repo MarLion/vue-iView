@@ -62,16 +62,6 @@
                   </Radio>
                 </Radio>
               </RadioGroup>
-              <!--
-              <dl v-for="item in existModal" :key="item.id">
-                <dt>
-                  <Checkbox v-model="item.flag" @on-change="chooseLevel" :data-id="item.id"><Icon type="ios-arrow-down"></Icon>{{item.name}}</Checkbox>
-                </dt>
-                <dd v-for="it in item.levelDtoList" :key="it.id" class="mt10">
-                  <Checkbox v-model="it.flag" :data-id="it.id">{{it.name}}</Checkbox>
-                </dd>
-              </dl>
-              -->
             </div>
           </FormItem>
           <FormItem label="文章标题：" prop="name">
@@ -139,7 +129,6 @@
                 <Button>点击上传</Button>
               </Upload>
             </div>
-            <!--<editor-view v-on:transmit-con="onContent" v-bind:original="artFormData.content"></editor-view>-->
           </FormItem>
           <FormItem label="添加视频：">
             <div class="add-image">
@@ -284,7 +273,6 @@
                 <Button>点击上传</Button>
               </Upload>
             </div>
-            <!--<editor-view v-on:transmit-con="onReContent" v-bind:original="artReFormData.content"></editor-view>-->
           </FormItem>
           <FormItem label="添加视频：">
             <div class="add-image">
@@ -411,8 +399,6 @@
         uploadUrl:base.baseUrl.serviceOne + 'column_activity/saveFile',//电视台相亲上传图片接口
         ediUploadUrl:base.baseUrl.serviceOne + 'gift/saveGiftFile', //单个图片上传 用礼物上传图片接口 多张图片上传 用相亲专栏图片上传接口
         videoUploadUrl:base.baseUrl.serviceOne + 'documents/saveCommonVideoFile',
-        //uploadUrl:'http://192.168.1.234:6001/column_activity/saveFile',//电视台相亲上传图片接口
-        // videoUploadUrl:'http://192.168.1.234:6001/documents/saveCommonVideoFile',
         total:'',
         loading:false,
         artValue:false,
@@ -663,14 +649,26 @@
                     this.artDetailValue = true;
                     this.artDetail.title = params.row.name;
                     this.artDetail.subTitle = params.row.nameSub;
-                    this.artDetail.content = params.row.content;
-                    this.$refs.deContent.innerHTML =  this.artDetail.content;
                     if (params.row.videoPath !== '' && params.row.videoPath != null) {
                       this.isVideo = true;
                       this.artDetail.video = params.row.videoPath;
                     } else {
                       this.isVideo = false;
                     }
+                    axios.ArticlrContentDetail({id:params.row.id})
+                      .then(res => {
+                        //console.log(res);
+                        if (res.code === '0') {
+                          this.artDetail.content = res.data.content;
+                          this.$refs.deContent.innerHTML =  this.artDetail.content;
+                        } else {
+                          this.$Message.error('文章内容查询失败！');
+                        }
+                      })
+                      .catch(error => {
+                        console.log(error);
+                        this.$Message.error('文章内容查询失败！');
+                      })
                   }
                 }
               },'详情');
@@ -691,12 +689,13 @@
                     this.artReFormData.name = params.row.name;
                     this.artReFormData.nameSub = params.row.nameSub;
                     this.artReFormData.type = params.row.type;
-                    params.row.backPicList.forEach((item,index) => {
-                      this.dataDefault.push({url:item,name:index,status:'finished'})
-                    });
-                    this.$refs.artReUpload.fileList = this.dataDefault;
-                    this.reUploadList = this.$refs.artReUpload.fileList;
-                    this.artReFormData.content = params.row.content;
+                    if (params.row.backPicList.length > 0) {  //这里要做一下判断 否则如果原先没有封面 修改添加的时候reUploadList元素会缺少percentage等键值 添加第一张时会报错
+                      params.row.backPicList.forEach((item,index) => {
+                        this.dataDefault.push({url:item,name:index,status:'finished'})
+                      });
+                      this.$refs.artReUpload.fileList = this.dataDefault;
+                      this.reUploadList = this.$refs.artReUpload.fileList;
+                    }
                     this.artReFormData.videoPath = params.row.videoPath;
                     if (params.row.videoPath !== '' && params.row.videoPath != null) {
                       this.dataDefaultVideo.push({url:params.row.videoPath,status:'finished'});
@@ -706,6 +705,19 @@
                     this.$refs.videoReUpload.fileList = this.dataDefaultVideo;
                     this.reVideoUploadList = this.$refs.videoReUpload.fileList;
                     this.artReFormData.recomment = params.row.recomment.toString();
+                    axios.ArticlrContentDetail({id:params.row.id})
+                      .then(res => {
+                        //console.log(res);
+                        if (res.code === '0') {
+                          this.artReFormData.content = res.data.content;
+                        } else {
+                          this.$Message.error('文章内容查询失败！');
+                        }
+                      })
+                      .catch(error => {
+                        console.log(error);
+                        this.$Message.error('文章内容查询失败！');
+                      })
                   }
                 }
               },'修改');
@@ -780,7 +792,6 @@
                 },
                 on:{
                   click:() => {
-                    //console.log(params.row.id);
                     axios.ArticleRecommeend({id:params.row.id,recomment:1})
                       .then(res => {
                         //console.log(res);
@@ -811,7 +822,6 @@
                 },
                 on:{
                   click:() => {
-                    //console.log(params.row.id);
                     axios.ArticleRecommeend({id:params.row.id,recomment:0})
                       .then(res => {
                         //console.log(res);
@@ -1027,14 +1037,9 @@
             this.$Message.error('获取模块失败！');
           })
       },
-      // chooseLevel:function (value) {
-      //   console.log(this.artFormData.levelId);
-      // },
       //上传封面
       handleSuccess:function (res,file,fileList) {
-        //console.log(file);
         if (res.code === 200) {
-          //console.log(res);
           file.url = res.result[0].filePath;
         } else {
           this.artTip = true;
@@ -1102,7 +1107,6 @@
         this.artFormData.videoPath = '';
       },
       handleVideoSuccess:function (res,file,fileList) {
-        //console.log(file);
         if (res.code === 200) {
           file.url = res.result.filePath;
           this.artFormData.videoPath = res.result.filePath;
@@ -1131,7 +1135,6 @@
             this.uploadList.forEach(item => {
               this.artFormData.backPicList.push(item.url);
             });
-            //console.log(this.artFormData.backPicList);
             axios.ArticleAddOrRevise(this.artFormData)
               .then(res => {
                 //console.log(res);
@@ -1225,7 +1228,6 @@
         this.$refs.videoReUpload.fileList.splice(fileList.indexOf(file), 1);
         this.reVideoUploadList = this.$refs.videoReUpload.fileList;
         this.artReFormData.videoPath = '';
-        //console.log(this.artReFormData.videoPath);
         this.artReFormData.type = 0;
       },
       handleReVideoSuccess:function (res,file,fileList) {
@@ -1238,7 +1240,6 @@
           } else {
             this.artReFormData.type = 2;
           }
-          //console.log(this.artReFormData.type);
         } else {
           this.artTip = true;
           this.$refs.artTip.innerHTML = '视频上传失败！'

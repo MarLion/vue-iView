@@ -42,3 +42,7 @@ input,button,textarea,select{*font-size:100%}
  @media screen and (max-width: 1440px) {
    .checkWid{width: 100px!important;}
  }
+.middle-checkWid{width: 150px!important;}
+@media screen and (max-width: 1440px) {
+  .middle-checkWid{width: 100px!important;}
+}

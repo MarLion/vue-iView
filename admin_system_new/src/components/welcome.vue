@@ -17,15 +17,14 @@
       </div>
       <div class="chart-container mt70">
         <div ref="conOne" class="table"></div>
-        <!--<div ref="conTwo" class="table"></div>-->
       </div>
       <div>
         <div ref="conThree" class="table-an"></div>
       </div>
     </div>
     <div v-else>
-      <h1 class="mt50">欢迎使用相亲交友后台管理系统</h1>
-    </div>
+
+  </div>
   </div>
 </template>
 

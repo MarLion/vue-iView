@@ -5,7 +5,7 @@
     </div>
     <div class="head-right">
       <div class="head-person">
-        <Icon type="md-person" />
+        <Icon type="md-person" @click="fullScreen"/>
       </div>
       <div class="head-message ml30">
         <p>
@@ -43,6 +43,28 @@
     computed:{
       userName:function () {
         return this.$store.state.admin_token;
+      }
+    },
+    methods:{
+      fullScreen:function () {
+        /*
+        if(document.documentElement.RequestFullScreen){
+          document.documentElement.RequestFullScreen();
+        }
+        //兼容火狐
+        console.log(document.documentElement.mozRequestFullScreen);
+        if(document.documentElement.mozRequestFullScreen){
+          document.documentElement.mozRequestFullScreen();
+        }
+        //兼容谷歌等可以webkitRequestFullScreen也可以webkitRequestFullscreen
+        if(document.documentElement.webkitRequestFullScreen){
+          document.documentElement.webkitRequestFullScreen();
+        }
+        //兼容IE,只能写msRequestFullscreen
+        if(document.documentElement.msRequestFullscreen){
+          document.documentElement.msRequestFullscreen();
+        }
+        */
       }
     }
   }

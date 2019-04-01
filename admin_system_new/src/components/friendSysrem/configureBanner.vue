@@ -152,9 +152,9 @@
         :mask-closable = "false"
       >
         <p ref="bannerTip"></p>
-      <div slot="footer">
-        <Button type="info"  @click="del">确定</Button>
-      </div>
+        <div slot="footer">
+          <Button type="info"  @click="del">确定</Button>
+        </div>
       </Modal>
       <Modal
         title="提示"
@@ -172,7 +172,7 @@
 </template>
 
 <script>
-  import axios from "@/axios/axios";
+  import axios from "../../axios/axios";
   import * as base from '../../axios/base';
   export default {
     name: "configureBanner",
@@ -548,7 +548,6 @@
           })
       },
       getArtId:function (e,id) {
-        //console.log(id);
         this.bannerFormData.contentId = id;
       },
       //新增
@@ -557,7 +556,7 @@
           if (valid) {
             axios.BannerSaveAndRevise(this.bannerFormData)
               .then(res => {
-                console.log(res);
+                //console.log(res);
                 if (res.code === '0') {
                   this.isAddBanner = false;
                   this.bannerSuccess = true;
@@ -620,7 +619,6 @@
       },
       //修改
       reClick:function (id,contentName,contentId,picture,name,showType) {
-        //console.log(showType);
         this.dataDefault.push({url:picture,name:name,status:'finished'});
         this.$refs.bannerReUpload.fileList = this.dataDefault;
         this.reUploadList = this.$refs.bannerReUpload.fileList;
@@ -630,11 +628,8 @@
         this.bannerReFormData.picture = picture;
         this.bannerReFormData.name = name;
         this.bannerReFormData.showType = showType;
-        //console.log(this.bannerReFormData.contentId);
       },
       searchReArticle:function(name){
-        //this.bannerReFormData.contentId = '';
-        //console.log(this.bannerReFormData.contentId);
         axios.BannerArticleCheck({name:name})
           .then(res => {
             //console.log(res);
@@ -651,7 +646,6 @@
       },
       getReArtId:function (e,id) {
         this.bannerReFormData.contentId = id;
-        //console.log(id);
       },
       bannerReSub:function () {
         this.$refs.bannerReForm.validate(valid => {

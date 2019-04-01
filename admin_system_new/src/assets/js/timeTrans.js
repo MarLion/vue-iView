@@ -51,7 +51,7 @@ export default {
   },
   //时间戳转时间
   getTime:function (ins) {
-    let con = '';
+    let con;
     let time = new Date(ins);
     let year = time.getFullYear(),
       month = time.getMonth() + 1,
@@ -66,5 +66,18 @@ export default {
     sec = sec > 9 ? sec : '0'+sec;
     con = year + '-' + month + '-' + day + ' ' + hour + ':' + min + ':' + sec;
     return con;
+  },
+
+  //截取视频第一帧
+  cutVideo:function (video,img) {
+    console.log(1);
+    let scale = 1;
+    let canvas = document.createElement("canvas");//创建画布
+    canvas.width = video.clientWidth * scale;
+    canvas.height = video.clientHeight * scale;//设定宽高比
+    canvas.getContext('2d').drawImage(video, 0, 0, canvas.width, canvas.height);//将视频此刻帧数画入画布
+    console.log(canvas.toDataURL("image/png"));
+    img.setAttribute('src',canvas.toDataURL("image/png"))
+    //return canvas.toDataURL("image/png");
   }
 }

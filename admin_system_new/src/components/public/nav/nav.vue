@@ -4,18 +4,47 @@
       <Submenu name="hn">
         <template slot="title">
           <Icon type="ios-analytics"/>
-          <span>红娘管理</span>
+          <span class="fw fs16">红娘管理</span>
         </template>
-        <MenuItem v-if="users !== 'master'" :to="{path: '/welcome'}" name="/welcome">数据看板</MenuItem>
-        <Submenu v-for="(item,index) in menus" :key="index" :name='item.group'>
+        <Submenu v-for="(item,index) in menus.HNmenus" :key="index" :name='item.group'>
+          <template slot="title"><span>{{item.group}}</span></template>
+          <MenuItem v-for="(it,index) in item.items" :to="{path:it.path}" :key="it.name" :name="it.path">{{it.name}}</MenuItem>
+        </Submenu>
+      </Submenu>
+      <Submenu name="yys">
+        <template slot="title">
+          <Icon type="ios-heart"/>
+          <span class="fw fs16">营养师管理</span>
+        </template>
+        <Submenu v-for="(item,index) in menus.YYSmenus" :key="index" :name='item.group'>
+          <template slot="title"><span>{{item.group}}</span></template>
+          <MenuItem v-for="(it,index) in item.items" :to="{path:it.path}" :key="it.name" :name="it.path">{{it.name}}</MenuItem>
+        </Submenu>
+      </Submenu>
+      <Submenu name="news">
+        <template slot="title">
+          <Icon type="ios-paper"/>
+          <span class="fw fs16">新闻管理</span>
+        </template>
+        <Submenu v-for="(item,index) in menus.NEWSmenus" :key="index" :name='item.group'>
+        <template slot="title"><span>{{item.group}}</span></template>
+        <MenuItem v-for="(it,index) in item.items" :to="{path:it.path}" :key="it.name" :name="it.path">{{it.name}}</MenuItem>
+      </Submenu>
+      </Submenu>
+      <Submenu name="sys">
+        <template slot="title">
+          <Icon type="ios-build"/>
+          <span class="fw fs16">系统管理</span>
+        </template>
+        <Submenu v-for="(item,index) in menus.SYSmenus" :key="index" :name='item.group'>
           <template slot="title"><span>{{item.group}}</span></template>
           <MenuItem v-for="(it,index) in item.items" :to="{path:it.path}" :key="it.name" :name="it.path">{{it.name}}</MenuItem>
         </Submenu>
       </Submenu>
       <Submenu name="super" v-if="users === 'admin'">
         <template slot="title">
-          <Icon type="ios-build"/>
-          <span>权限管理</span>
+          <Icon type="ios-medical"/>
+          <span class="fw fs16">权限管理</span>
         </template>
         <MenuItem :to="{path: '/superAdmin'}" name="/superAdmin">权限设置</MenuItem>
       </Submenu>

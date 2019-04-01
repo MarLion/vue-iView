@@ -8,15 +8,15 @@
         </div>
         <div class="route-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="startTime" @on-change="chooseStartTime" :options="begOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseStartTime" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" v-model="endTime" @on-change="chooseEndTime" :options="endOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseEndTime" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">路线名称：</span>
           <span><Input v-model="routeNic" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
           <span>
             <Select v-model="routeType" style="width:200px">
-              <Option v-for="(item,index) in detailList" :value="item.value" :key="index">{{ item.label }}</Option>
+              <Option v-for="(item,index) in routeList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </span>
           <span class="ml10"><Button icon="ios-search" @click="checkClick">查询</Button></span>
@@ -42,6 +42,41 @@
           </span>
         </div>
         <div class="add-form mt30">
+          <div class="divs">
+            <p class="p">线路封面：</p>
+            <div class="add-image">
+              <div class="demo-upload-list mt10" v-for="item in coverUploadList">
+                <template v-if="item.status === 'finished'">
+                  <img :src="item.url">
+                  <div class="demo-upload-list-cover">
+                    <Icon type="ios-eye-outline" @click.native="handleCoverView(item.url)"></Icon>
+                    <Icon type="ios-trash-outline" @click.native="handleCoverRemove(item)"></Icon>
+                  </div>
+                </template>
+                <template v-else>
+                  <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+                </template>
+              </div>
+              <Upload :action='coverUploadUrl'
+                      ref="coverUpload"
+                      :show-upload-list="false"
+                      :on-success="handleCoverSuccess"
+                      :format="['jpg','jpeg','png','bmp']"
+                      :on-format-error="handleFormatError"
+                      :before-upload="handleCoverBeforeUpload"
+                      multiple
+                      type="drag"
+                      style="display: inline-block;width:100px;margin-top: 10px;">
+                <div style="width: 100px;height:100px;line-height: 100px;">
+                  <Icon type="ios-camera" size="40"></Icon>
+                </div>
+              </Upload>
+              <Modal title="查看封面" v-model="coverVisible">
+                <img :src= 'coverImgUrl' style="width: 100%">
+                <div slot="footer"></div>
+              </Modal>
+            </div>
+          </div>
           <div class="divs">
             <p class="p">上传照片：</p>
             <div class="add-image">
@@ -98,9 +133,20 @@
                 </Col>
               </Row>
             </FormItem>
-            <FormItem label="产品价格：" prop="price" style="width: 500px;">
-              <InputNumber v-model="formData.price" :max="10000000" :min="0" style="width: 90%;"></InputNumber>
-              <span>玄乐币</span>
+            <FormItem label="产品价格：" style="width: 500px;">
+              <Row>
+                <Col span="14">
+                  <FormItem prop="price">
+                    <InputNumber v-model="formData.price" :max="10000000" :min="0" style="width: 175px;"></InputNumber>
+                    <span>玄乐币</span>
+                  </FormItem>
+                </Col>
+                <Col span="10">
+                  <FormItem>
+                    <Checkbox v-model="formData.isShowPay" true-value="1" false-value="0">是否显示支付按钮</Checkbox>
+                  </FormItem>
+                </Col>
+              </Row>
             </FormItem>
             <FormItem label="费用清单：" prop="tourList" style="width: 500px;">
               <Input type="text" v-model="formData.tourList"></Input>
@@ -109,7 +155,7 @@
               <InputNumber  v-model="formData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
             </FormItem>
             <FormItem label="详情类型：" style="width: 500px;">
-              <Select v-model="formData.infoType" style="width:100%">
+              <Select v-model="formData.infoType" style="width:100%" @on-change="infoChange">
                 <Option v-for="(item,index) in detailList" :value="item.value" :key="index">{{ item.label }}</Option>
               </Select>
             </FormItem>
@@ -187,6 +233,19 @@
       </div>
       <div class="add-form mt30">
         <div class="divs">
+          <p class="p">路线封面：</p>
+          <div class="add-image">
+            <template v-if="detailData.isCover">
+              <div class="demo-upload-list">
+                <img :src="detailData.backgroundImage">
+              </div>
+            </template>
+            <template v-else>
+              <div class="demo-upload-list">暂无封面</div>
+            </template>
+          </div>
+        </div>
+        <div class="divs mt30">
           <p class="p">照&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;片：</p>
           <div class="add-image">
             <template v-if="detailData.isPhoto">
@@ -259,6 +318,42 @@
       </div>
       <div class="add-form mt30">
         <div class="divs">
+        <p class="p">线路封面：</p>
+        <div class="add-image">
+          <div class="demo-upload-list mt10" v-for="item in coverReUploadList">
+            <template v-if="item.status === 'finished'">
+              <img :src="item.url">
+              <div class="demo-upload-list-cover">
+                <Icon type="ios-eye-outline" @click.native="handleCoverReView(item.url)"></Icon>
+                <Icon type="ios-trash-outline" @click.native="handleCoverReRemove(item)"></Icon>
+              </div>
+            </template>
+            <template v-else>
+              <Progress v-if="item.showProgress" :percent="item.percentage" hide-info></Progress>
+            </template>
+          </div>
+          <Upload :action='coverUploadUrl'
+                  ref="coverReUpload"
+                  :show-upload-list="false"
+                  :default-file-list="reviseCoverDefaultList"
+                  :on-success="handleCoverReSuccess"
+                  :format="['jpg','jpeg','png','bmp']"
+                  :on-format-error="handleReviseFormatError"
+                  :before-upload="handleCoverReBeforeUpload"
+                  multiple
+                  type="drag"
+                  style="display: inline-block;width:100px;margin-top: 10px;">
+            <div style="width: 100px;height:100px;line-height: 100px;">
+              <Icon type="ios-camera" size="40"></Icon>
+            </div>
+          </Upload>
+          <Modal title="查看封面" v-model="coverReVisible">
+            <img :src= 'coverReImgUrl' style="width: 100%">
+            <div slot="footer"></div>
+          </Modal>
+        </div>
+      </div>
+        <div class="divs mt30">
           <p class="p">上传照片：</p>
           <div class="add-image">
             <div class="demo-upload-list" v-for="item in reviseUploadList">
@@ -289,7 +384,7 @@
               </div>
             </Upload>
             <Modal title="查看照片" v-model="reviseVisible">
-              <img :src= 'reviseImgUrl' style="width: 100%">
+              <img :src= 'reviseImgUrl' style="width: 100%">t
               <div slot="footer"></div>
             </Modal>
           </div>
@@ -315,9 +410,20 @@
               </Col>
             </Row>
           </FormItem>
-          <FormItem label="产品价格：" prop="price" style="width: 500px;">
-            <InputNumber v-model="reviseData.price" :max="10000000" :min="0" style="width: 90%;"></InputNumber>
-            <span>玄乐币</span>
+          <FormItem label="产品价格：" style="width: 500px;">
+            <Row>
+              <Col span="14">
+                <FormItem prop="price">
+                  <InputNumber v-model="reviseData.price" :max="10000000" :min="0" style="width: 175px;"></InputNumber>
+                  <span>玄乐币</span>
+                </FormItem>
+              </Col>
+              <Col span="10">
+                <FormItem>
+                  <Checkbox v-model="reviseData.isShowPay" true-value="1" false-value="0">是否显示支付按钮</Checkbox>
+                </FormItem>
+              </Col>
+            </Row>
           </FormItem>
           <FormItem label="费用清单：" prop="tourList" style="width: 500px;">
             <Input type="text" v-model="reviseData.tourList"></Input>
@@ -327,7 +433,7 @@
           </FormItem>
           <FormItem label="详情类型：" style="width: 500px;">
             <Select v-model="reviseData.infoType" style="width:100%" @on-change="infoTypeChange">
-              <Option v-for="(item,index) in detailList" :value="item.value" :key="index">{{ item.label }}</Option>
+              <Option v-for="(item,index) in detailReList" :value="item.value" :key="index">{{ item.label }}</Option>
             </Select>
           </FormItem>
           <template v-if="isReCustom">
@@ -388,6 +494,22 @@
         </Form>
       </div>
     </Drawer>
+    <!--填写推送消息-->
+    <Modal
+      v-model="isPropel"
+      :loading="propelLoading"
+      :mask-closable="false"
+      title="推送消息"
+      @on-ok="proSub"
+      @on-visible-change="isProVisible"
+    >
+      <Form :model="proFormData" ref="proForm" :rules="ruleValidatePro" :label-width="100" class="mt20">
+        <FormItem label="消息内容：" prop="message">
+          <Input type="textarea" v-model="proFormData.message"></Input>
+        </FormItem>
+      </Form>
+    </Modal>
+    <!--提示弹框-->
     <Modal
       title="提示"
       v-model="loginFail"
@@ -518,8 +640,11 @@
         }
       };
       return {
-        uploadUrl:base.baseUrl.serviceOne + 'column_tour/saveFile',
+        coverUploadUrl:base.baseUrl.serviceOne + 'lifeTrend/saveFiles',//旅游封面图上传接口
+        uploadUrl:base.baseUrl.serviceOne + 'column_tour/saveFile',//旅游路线图片上传接口
         ediUploadUrl:base.baseUrl.serviceOne + 'gift/saveGiftFile',//编辑器插入图片上传接口 和礼物配置一个接口
+        isPropel:false,
+        propelLoading:true,
         value3:false,
         value4:false,
         value5:false,
@@ -593,6 +718,16 @@
             label:'自定义'
           }
         ],
+        detailReList:[
+          {
+            value:0,
+            label:'模板'
+          },
+          {
+            value:1,
+            label:'自定义'
+          }
+        ],
         //请求列表参数
         page:1,
         pageSize:10,
@@ -600,6 +735,11 @@
         endTime:'',
         routeNic:'',
         routeType:'',
+        proFormData:{
+          activityId:'',
+          message:'',
+          webUrl:''
+        },
         columns:[
           {
             type: 'index',
@@ -645,7 +785,7 @@
             title:'操作选项',
             key:'action',
             align:'center',
-            width:260,
+            width:300,
             render:(h,params) => {
               if (params.row.status === 0) {
                 return h('div', [
@@ -661,7 +801,7 @@
                       click: () => {
                         axios.TourRouteDetail({id:params.row.id})
                           .then(res => {
-                            //console.log(res);
+                            console.log(res);
                             if (res.code === 200) {
                               this.value4 = true;
                               if (res.result.filePaths != null && res.result.filePaths !== "" ) {
@@ -670,6 +810,13 @@
                               } else {
                                 this.detailData.detailUploadList = [];
                                 this.detailData.isPhoto = false;
+                              }
+                              if (res.result.backgroundImage != null && res.result.backgroundImage !== "" ) {
+                                this.detailData.isCover = true;
+                                this.detailData.backgroundImage = res.result.backgroundImage;
+                              } else {
+                                this.detailData.backgroundImage = '';
+                                this.detailData.isCover = false;
                               }
                               this.detailData.name = res.result.name;
                               this.detailData.tourStart = res.result.tourStart;
@@ -714,8 +861,15 @@
                       click: () => {
                         axios.TourRouteDetail({id:params.row.id})
                           .then(res => {
-                            //console.log(res);
+                            console.log(res);
                             if (res.code === 200) {
+                              if (res.result.backgroundImage != null && res.result.backgroundImage !== "" ) {
+                                this.reviseCoverDefaultList.push({url:res.result.backgroundImage});
+                              } else {
+                                this.reviseCoverDefaultList = [];
+                              }
+                              this.$refs.coverReUpload.fileList = this.reviseCoverDefaultList;
+                              this.coverReUploadList = this.$refs.coverReUpload.fileList;
                               if (res.result.filePaths != null && res.result.filePaths !== "" ) {
                                 let arr = res.result.filePaths.split(',');
                                 arr.forEach((item,index) => {
@@ -724,14 +878,13 @@
                               } else {
                                 this.reviseDefaultList = [];
                               }
-                              //console.log(this.$refs.reviseUpload.fileList);
                               this.$refs.reviseUpload.fileList = this.reviseDefaultList;
                               this.reviseUploadList = this.$refs.reviseUpload.fileList;
-                              //console.log(this.$refs.reviseUpload.fileList);
                               this.reviseData.name = res.result.name;
                               this.reviseData.tourStart = res.result.tourStart;
                               this.reviseData.tourEnd = res.result.tourEnd;
                               this.reviseData.price = res.result.price;
+                              this.reviseData.isShowPay = res.result.isShowPay.toString();
                               this.reviseData.tourList = res.result.tourList;
                               this.reviseData.num = res.result.num;
                               this.reviseData.infoType = res.result.infoType;
@@ -788,7 +941,7 @@
                           .catch(error => {
                             console.log(error);
                             this.loginFail = true;
-                            this.$refs.failTip.innerHTML = '线路取消失败！'
+                            this.$refs.failTip.innerHTML = '线路取消失败！';
                           })
                       }
                     }
@@ -806,7 +959,28 @@
                         this.$router.push({path:'/tourSignList',query:{tourId:params.row.id}})
                       }
                     }
-                  }, '报名清单')
+                  }, '报名清单'),
+                  h('Button', {
+                    props: {
+                      type: 'success',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        this.proFormData.activityId = params.row.id;
+                        if (params.row.infoType === 0) {
+                          //this.proFormData.webUrl = 'http://yys.zhongwei-info.com:8001/blindDateApp/view/tvTravelInfo/h5_matchmaker_tvTravelInfo.html?id='+params.row.id+'&actType=1&articleType=7&fromHome=2';
+                          this.proFormData.webUrl = 'http://192.168.1.197:8888/blindDateApp/view/tvTravelInfo/h5_matchmaker_tvTravelInfo.html?id='+params.row.id+'&actType=1&articleType=7&fromHome=2';
+                        } else {
+                          this.proFormData.webUrl = params.row.xlInfoUrl + '?id=' + params.row.id +'&actType=1&articleType=7&fromHome=2';
+                        }
+                        this.isPropel = true;
+                      }
+                    }
+                  }, '推送'),
                 ])
               } else if (params.row.status === 1) {
                 return h('div', [
@@ -840,14 +1014,18 @@
         ],
         listData:[],
         uploadList:[],
+        coverUploadList:[],
         imgUrl:'',
         visible:false,
+        coverVisible:false,
+        coverImgUrl:'',
         formData:{
           creatorId:'123456',
           name:'',
           tourStart:'',
           tourEnd:'',
           price:null,
+          isShowPay:'1',
           tourList:'',
           num:null,
           infoType:0,
@@ -855,7 +1033,8 @@
           tvInfoUrl:'',
           description:'',
           tourArrangement:'',
-          filePath:[]
+          filePath:[],
+          backgroundImage:''
         },
         ruleValidate:{
           name:[
@@ -896,6 +1075,8 @@
         isMod:true,
         isCustom:true,
         detailData:{
+          isCover:false,
+          backgroundImage:'',
           detailUploadList:[],
           isPhoto:true,
           name:'',
@@ -909,14 +1090,19 @@
           tvInfoUrl:'',
           description:'',
           tourArrangement:'',
+          isShowPay:''
         },
         //修改
         isReMod:true,
         isReCustom:true,
         reviseVisible:false,
+        coverReVisible:false,
         reviseDefaultList:[],
         reviseUploadList:[],
+        coverReUploadList:[],
+        reviseCoverDefaultList:[],
         reviseImgUrl:'',
+        coverReImgUrl:'',
         reviseId:'',
         reviseData:{
           id:'',
@@ -932,9 +1118,17 @@
           description:'',
           tourArrangement:'',
           filePath:[],
-          delFilePath:[]
+          delFilePath:[],
+          backgroundImage:'',
+          delBackgroundImage:'',
+          isShowPay:'1',
         },
         reviseAdding:false,
+        ruleValidatePro:{
+          message:[
+            {required:true,message:'请填写信息内容'}
+          ]
+        },
         //景区介绍 行程安排编辑器
         myOptions:{
           placeholder:'请编写景区介绍',
@@ -1014,6 +1208,7 @@
     mounted () {
      this.getRouteList();
      this.uploadList = this.$refs.upload.fileList;
+     this.coverUploadList = this.$refs.coverUpload.fileList;
     },
     methods:{
       checkClick:function () {
@@ -1032,7 +1227,7 @@
           pageSize:this.pageSize
         })
           .then(res => {
-            //console.log(res);
+            //console.log(JSON.stringify(res.result.list[0]));
             if (res.code === 200) {
               this.loading = false;
               this.listData = res.result.list;
@@ -1080,7 +1275,61 @@
           return check;
         }
       },
+      infoChange:function (value) {
+        if (value === 0) {
+          this.formData.xlInfoUrl = '';
+          this.formData.tvInfoUrl = '';
+        } else {
+          this.formData.description = '';
+          this.formData.tourArrangement = '';
+        }
+      },
       //上传照片方法
+      handleCoverView:function (url) {
+        this.coverVisible = true;
+        this.coverImgUrl = url;
+      },
+      handleCoverRemove:function (file) {
+        //删除之后 把封面图字段清空
+        axios.TourCoverDelete({backgroundImage:file.url})
+          .then(res => {
+            const fileList = this.$refs.coverUpload.fileList;
+            this.$refs.coverUpload.fileList.splice(fileList.indexOf(file), 1);
+            this.formData.backgroundImage =  '';
+          })
+          .catch(error => {
+            console.log(error);
+            this.loginFail = true;
+            this.$refs.failTip.innerHTML = '删除失败！'
+          });
+      },
+      handleCoverSuccess:function (res,file,fileList) {
+        //console.log(res);
+        if (res.code === 200) {
+          file.url = res.result.filePath;
+          //只能上传一张封面 可以在这里对字段赋值
+          this.formData.backgroundImage =  res.result.filePath;
+        } else {
+          this.loginFail = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
+      },
+      handleCoverBeforeUpload:function (file) {
+        const check = this.coverUploadList.length < 1;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '只能上传1张封面！'
+          });
+          return check;
+        }
+      },
       handleBeforeUpload:function (file) {
         //console.log(file);
         const check = this.uploadList.length < 9;
@@ -1125,7 +1374,7 @@
           .catch(error => {
             console.log(error);
             this.loginFail = true;
-            this.$refs.failTip.innerHTML = '删除出错！'
+            this.$refs.failTip.innerHTML = '删除失败！'
           })
       },
       formDataBegTime:function (date) {
@@ -1141,8 +1390,6 @@
             this.uploadList.forEach(item => {
               this.formData.filePath.push(item.url);
             });
-            //console.log(this.formData.filePath);
-            //console.log(JSON.stringify(this.formData));
             _that.adding = true;
             axios.TourAddRoute(this.formData)
               .then(res => {
@@ -1164,7 +1411,7 @@
                 this.formData.filePath = [];
                 _that.adding= false;
                 this.loginFail = true;
-                this.$refs.failTip.innerHTML = '上传出错！'
+                this.$refs.failTip.innerHTML = '上传出错！';
               })
           }
         });
@@ -1175,7 +1422,7 @@
       goList:function () {
         this.clearForm();
         this.value3 = false;
-        this.addSuccess =false;
+        this.addSuccess = false;
         this.page = 1;
         this.pageSize = 10;
         this.startTime = '';
@@ -1200,17 +1447,29 @@
         //重置图片
         this.$refs.upload.clearFiles();
         this.uploadList = this.$refs.upload.fileList;
+        this.$refs.coverUpload.clearFiles();
+        this.coverUploadList = this.$refs.coverUpload.fileList;
         this.formData.filePath = [];
+        this.formData.backgroundImage = '';
         //重置表单
         this.$refs.formData.resetFields();
+        this.formData.name = '';
+        this.formData.tourStart = '';
+        this.formData.tourEnd = '';
+        this.formData.price = null;
+        this.formData.tourList = '';
+        this.formData.num = null;
         this.formData.description = '';
         this.formData.tourArrangement = '';
         this.formData.xlInfoUrl = '';
         this.formData.tvInfoUrl = '';
-        this.formData.infoType = 0
+        this.formData.infoType = 0;
+        this.formData.isShowPay = '1';
       },
       //清空detail数据
       clearDetailData:function () {
+        this.detailData.isCover= true;
+        this.detailData.backgroundImage = '';
         this.detailData.detailUploadList = [];
         this.detailData.isPhoto = true;
         this.detailData.name = '';
@@ -1228,6 +1487,44 @@
         this.isCustom = true;
       },
       //修改路线
+      //封面
+      handleCoverReView:function (url) {
+        this.coverReVisible = true;
+        this.coverReImgUrl = url;
+      },
+      handleCoverReRemove:function (file) {
+        const fileList = this.$refs.coverReUpload.fileList;
+        this.$refs.coverReUpload.fileList.splice(fileList.indexOf(file), 1);
+        this.coverReUploadList = this.$refs.coverReUpload.fileList;
+        this.reviseData.backgroundImage = '';
+        this.reviseData.delBackgroundImage = file.url;
+      },
+      handleCoverReSuccess:function (res,file,fileList) {
+        if (res.code === 200) {
+          file.url = res.result.filePath;
+          this.coverReUploadList = fileList;
+        } else {
+          this.loginFail = true;
+          this.$refs.failTip.innerHTML = res.message;
+        }
+      },
+      handleCoverReBeforeUpload:function (file) {
+        const check = this.coverReUploadList.length < 1;
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Notice.warning({
+            title: '图片名过长！'
+          });
+          return len;
+        }
+        if (!check) {
+          this.$Notice.warning({
+            title: '只能上传1张封面！'
+          });
+          return check;
+        }
+      },
+      //图片
       handleReviseSucess:function (res,file,filelist) {
         if (res.code === 200) {
           file.url = res.result[0].filePath;
@@ -1236,7 +1533,6 @@
           this.loginFail = true;
           this.$refs.failTip.innerHTML = res.message;
         }
-        //console.log(this.$refs.reviseUpload.fileList);
       },
       handleReviseFormatError:function () {
         this.loginFail = true;
@@ -1265,12 +1561,13 @@
         this.reviseData.tourEnd = this.$trans.timeTranslate(this.reviseData.tourEnd);
         this.$refs.reviseData.validate((valid) => {
           if (valid) {
+            this.coverReUploadList.forEach( item => {
+              this.reviseData.backgroundImage = item.url;
+            });
             //如果放在验证之外 验证不过 点一次提交会push一次 如果验证过了 在提交之前push进数组
             this.reviseUploadList.forEach( item => {
               this.reviseData.filePath.push(item.url);
             });
-            //console.log(this.reviseData.filePath);
-            //console.log(JSON.stringify(this.reviseData));
             this.reviseAdding = true;
             axios.TourAddRoute(this.reviseData)
               .then(res => {
@@ -1305,24 +1602,36 @@
           }
         });
       },
+      //表单中有v-if判断组件是否挂载 如果使用resetFields重置表单会报错 手动清空即可
       clearRevise:function () {
         this.isReMod = true;
         this.isReCustom = true;
         //重置图片
         this.$refs.reviseUpload.clearFiles();
         this.reviseUploadList = this.$refs.reviseUpload.fileList;
+        this.$refs.coverReUpload.clearFiles();
+        this.coverReUploadList = this.$refs.coverReUpload.fileList;
         //重置表单
-        this.$refs.reviseData.resetFields();
+        //this.$refs.reviseData.resetFields();
+        this.reviseData.name = '';
+        this.reviseData.tourStart = '';
+        this.reviseData.tourEnd = '';
+        this.reviseData.price = null;
+        this.reviseData.tourList = '';
+        this.reviseData.num = null;
         this.reviseData.filePath = [];
         this.reviseData.delFilePath = [];
         this.reviseDefaultList = [];
+        this.reviseCoverDefaultList = [];
         this.reviseImgUrl = '';
+        this.coverReImgUrl = '';
         this.reviseId = '';
         this.reviseData.description = '';
         this.reviseData.tourArrangement = '';
         this.reviseData.xlInfoUrl = '';
         this.reviseData.tvInfoUrl = '';
-        this.reviseData.infoType = 0
+        this.reviseData.infoType = 0;
+        this.reviseData.isShowPay = '1';
       },
       //景区介绍编辑器上传图片
       handleEdiSuccess:function (res,file,fileList) {
@@ -1405,9 +1714,49 @@
           this.isReMod = false;
           this.isReCustom = true;
           this.reviseData.description = '';
-          this.reviseData.tvInfoUrl = '';
+          this.reviseData.tourArrangement = '';
         }
-      }
+      },
+      proSub:function () {
+        this.$refs.proForm.validate(valid => {
+          if (valid) {
+            axios.PropelTvActivity(this.proFormData)
+              .then(res => {
+                //console.log(res);
+                if (res.code === '0') {
+                  this.isPropel = false;
+                  this.loginFail = true;
+                  this.$refs.failTip.innerHTML = '推送成功！';
+                } else {
+                  this.changModal();
+                  this.loginFail = true;
+                  this.$refs.failTip.innerHTML = '推送失败！';
+                }
+              })
+              .catch(error => {
+                console.log(error);
+                this.changModal();
+                this.loginFail = true;
+                this.$refs.failTip.innerHTML = '推送失败！';
+              })
+          } else {
+            this.changModal();
+          }
+        });
+      },
+      isProVisible:function (value) {
+        if (!value) {
+          this.proFormData.activityId = '';
+          this.proFormData.webUrl = '';
+          this.$refs.proForm.resetFields();
+        }
+      },
+      changModal:function () {
+        this.propelLoading = false;
+        this.$nextTick(() => {
+          this.propelLoading = true;
+        });
+      },
     }
   }
 </script>
@@ -1470,10 +1819,6 @@
       width: 100px;
       text-align: right;
       padding: 10px 12px 10px 0;
-    }
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
     }
   }
   .detailSpan{

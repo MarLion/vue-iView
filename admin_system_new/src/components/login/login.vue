@@ -51,8 +51,9 @@
             //console.log(res.code);
             if (res.code === "0") {
               this.$store.dispatch('setUserInfo',res.data.userName);
-              sessionStorage.setItem('menus',JSON.stringify(res.data.menus));
-              this.$router.push({path:'/welcome'})
+              this.$store.dispatch('setUserId',res.data.userId);
+              sessionStorage.setItem('menus',JSON.stringify(res.data));
+              this.$router.push({path:'/welcomeNoRight'})
             }
             if (res.code === "1") {
               this.loading = false;

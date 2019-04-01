@@ -3,7 +3,6 @@
       <div class="list-bread">
         <div class="list-tit">
           <h1>圈子用户清单</h1>
-          <!--<span class="ml10"><Icon type="md-information-circle" />友情提示：取消资格用户会以短信方式告知用户，缴纳的报名费用会退还至用户的玄乐账户。</span>-->
         </div>
         <div class="list-list">
           <Breadcrumb>
@@ -15,7 +14,6 @@
       <div class="list-fun mt20">
         <div class="list-ope">
           <Button type="default" icon="ios-download" @click="exportData">导出EXCEL</Button>
-          <!--<Button icon="ios-cash" type="info" class="ml10" @click="cancelBatch" :loading="canceling">批量取消</Button>-->
         </div>
         <div class="list-search">
           <span class="ml15">报名日期从：</span>
@@ -28,7 +26,7 @@
         </div>
       </div>
       <div class="list-list mt30">
-        <Table border :columns="columns" :data="listData" :loading="loading" highlight-row @on-selection-change="selectUser"></Table>
+        <Table border :columns="columns" :data="listData" :loading="loading" highlight-row></Table>
         <Page :total="total" :current="userParams.page" v-if="total>10" show-elevator show-total @on-change="pageChangeDataEn" class="mt30"/>
       </div>
       <Modal
@@ -80,8 +78,8 @@
             align:'center'
           },
           {
-            title:'个性签名',
-            key:'sign',
+            title:'年龄',
+            key:'age',
             align:'center'
           },
           {
@@ -90,12 +88,12 @@
             align:'center'
           },
           {
-            title:'用户状态',
-            key:'userStatusName',
+            title:'性别',
+            key:'sex',
             align:'center'
           },
           {
-            title:'进圈日期',
+            title:'加入日期',
             key:'joinTime',
             align:'center'
           }
@@ -140,11 +138,10 @@
       endTime:function (date) {
         this.userParams.joinTimeEnd = date;
       },
-      selectUser:function () {
-
-      },
       pageChangeDataEn:function (page) {
-        console.log(page);
+        //console.log(page);
+        this.userParams.page = page;
+        this.getUserList();
       },
       del:function () {
         this.userTip = false;

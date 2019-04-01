@@ -8,9 +8,9 @@
         </div>
         <div class="data-search">
           <span class="ml15">发布日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateBeg" v-model="actCheckData.createTimeStart" :options="begOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateBeg" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">发布日期止：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateEnd" v-model="actCheckData.createTimeEnd" :options="endOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="actCreateEnd" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">活动名称：</span>
           <span><Input v-model="actCheckData.name" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
@@ -31,7 +31,7 @@
     <Drawer
       title="发布节目"
       v-model="actAddValue"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close = 'clearActAdd'
@@ -77,24 +77,75 @@
             </Modal>
           </div>
         </div>
-        <Form :model="actFormData" ref="actFormData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="节目名称：" prop="name">
+        <Form :model="actFormData" ref="actFormData" :rules="ruleValidate" :label-width="100" style="width: 100%;margin-top: 20px;">
+          <FormItem label="节目名称：" prop="name" style="width: 500px;">
             <Input type="text" v-model="actFormData.name"></Input>
           </FormItem>
-          <FormItem label="节目口号：" prop="slogan">
+          <FormItem label="节目口号：" prop="slogan" style="width: 500px;">
             <Input type="text" v-model="actFormData.slogan" style="width: 100%;"></Input>
           </FormItem>
-          <FormItem label="参与方式：" prop="participate">
+          <FormItem label="参与方式：" prop="participate" style="width: 500px;">
             <Input type="text" v-model="actFormData.participate"></Input>
           </FormItem>
-          <FormItem label="允许人数：" prop="num">
+          <FormItem label="允许人数：" prop="num" style="width: 500px;">
             <InputNumber v-model="actFormData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
-          <FormItem label="节目介绍：" prop="description">
-            <Input type="textarea" :maxlength="1000" v-model="actFormData.description"></Input>
+          <FormItem label="节目费用：" style="width: 500px;">
+            <Row>
+              <Col span="14">
+                <FormItem prop="price">
+                  <InputNumber v-model="actFormData.price" :max="10000000" :min="0" style="width: 175px;"></InputNumber>
+                  <span>玄乐币</span>
+                </FormItem>
+              </Col>
+              <Col span="10">
+                <FormItem>
+                  <Checkbox v-model="actFormData.isShowPay" true-value="1" false-value="0">是否显示支付按钮</Checkbox>
+                </FormItem>
+              </Col>
+            </Row>
+          </FormItem>
+          <FormItem label="节目介绍：" prop="description" >
+            <div class="editor-container">
+              <quill-editor
+                ref="myEditor"
+                v-model="actFormData.description"
+                :options="myOptions"
+              ></quill-editor>
+              <Upload
+                :action="ediUploadUrl"
+                ref="editorUpload"
+                class="editorUp"
+                :on-success="handleEdiSuccess"
+                :format="['jpg','jpeg','png','bmp']"
+                :on-format-error="handleEdiFormatError"
+                :before-upload="handleEdiBefore"
+                style="display: none"
+              >
+                <Button>点击上传</Button>
+              </Upload>
+            </div>
           </FormItem>
           <FormItem label="节目预告：" :maxlength="1000" prop="arrangement">
-            <Input type="textarea" v-model="actFormData.arrangement"></Input>
+            <div class="editor-container">
+              <quill-editor
+                ref="arrangeEditor"
+                v-model="actFormData.arrangement"
+                :options="myArrOptions"
+              ></quill-editor>
+              <Upload
+                :action="ediUploadUrl"
+                ref="arrEditorUpload"
+                class="arrEditorUp"
+                :on-success="arrHandleEdiSuccess"
+                :format="['jpg','jpeg','png','bmp']"
+                :on-format-error="handleEdiFormatError"
+                :before-upload="handleEdiBefore"
+                style="display: none"
+              >
+                <Button>点击上传</Button>
+              </Upload>
+            </div>
           </FormItem>
           <FormItem style="width: 200px!important;">
             <Button type="primary" @click="actSubClick" :loading="addingAct">发布节目</Button>
@@ -106,7 +157,7 @@
     <Drawer
       title="节目详情"
       v-model="actDetailValue"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close = 'clearActDetail'
@@ -147,12 +198,16 @@
           <p class="detailSpan">{{actDetailDate.num}}</p>
         </div>
         <div class="add-detail">
+          <p class="p">节目费用：</p>
+          <p class="detailSpan">{{actDetailDate.price}}</p>
+        </div>
+        <div class="add-detail">
           <p class="p">节目介绍：</p>
-          <pre class="detailWidth">{{actDetailDate.description}}</pre>
+          <pre class="detailWidth" ref="des"></pre>
         </div>
         <div class="add-detail">
           <p class="p">节目预告：</p>
-          <pre class="detailWidth">{{actDetailDate.arrangement}}</pre>
+          <pre class="detailWidth" ref="arrange"></pre>
         </div>
       </div>
     </Drawer>
@@ -160,7 +215,7 @@
     <Drawer
       title="节目修改"
       v-model="actReviseValue"
-      width="720"
+      width="1200"
       :mask-closable="false"
       :styles="styles"
       @on-close = 'clearActRevise'
@@ -207,24 +262,75 @@
             </Modal>
           </div>
         </div>
-        <Form :model="actReviseFormData" ref="actReviseFormData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-          <FormItem label="节目名称：" prop="name">
+        <Form :model="actReviseFormData" ref="actReviseFormData" :rules="ruleValidate" :label-width="100" style="width: 100%;margin-top: 20px;">
+          <FormItem label="节目名称：" prop="name" style="width: 500px;">
             <Input type="text" v-model="actReviseFormData.name"></Input>
           </FormItem>
-          <FormItem label="节目口号：" prop="slogan">
+          <FormItem label="节目口号：" prop="slogan" style="width: 500px;">
             <Input type="text" v-model="actReviseFormData.slogan" style="width: 100%;"></Input>
           </FormItem>
-          <FormItem label="参与方式：" prop="participate">
+          <FormItem label="参与方式：" prop="participate" style="width: 500px;">
             <Input type="text" v-model="actReviseFormData.participate"></Input>
           </FormItem>
-          <FormItem label="允许人数：" prop="num">
+          <FormItem label="允许人数：" prop="num" style="width: 500px;">
             <InputNumber v-model="actReviseFormData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
           </FormItem>
+          <FormItem label="节目费用：" style="width: 500px;">
+            <Row>
+              <Col span="14">
+                <FormItem prop="price">
+                  <InputNumber v-model="actReviseFormData.price" :max="10000000" :min="0" style="width: 175px;"></InputNumber>
+                  <span>玄乐币</span>
+                </FormItem>
+              </Col>
+              <Col span="10">
+                <FormItem>
+                  <Checkbox v-model="actReviseFormData.isShowPay" true-value="1" false-value="0">是否显示支付按钮</Checkbox>
+                </FormItem>
+              </Col>
+            </Row>
+          </FormItem>
           <FormItem label="节目介绍：" :maxlength="1000" prop="description">
-            <Input type="textarea" v-model="actReviseFormData.description"></Input>
+            <div class="editor-container">
+              <quill-editor
+                ref="myReEditor"
+                v-model="actReviseFormData.description"
+                :options="myReOptions"
+              ></quill-editor>
+              <Upload
+                :action="ediUploadUrl"
+                ref="editorReUpload"
+                class="editorReUp"
+                :on-success="reHandleEdiSuccess"
+                :format="['jpg','jpeg','png','bmp']"
+                :on-format-error="handleEdiFormatError"
+                :before-upload="handleEdiBefore"
+                style="display: none"
+              >
+                <Button>点击上传</Button>
+              </Upload>
+            </div>
           </FormItem>
           <FormItem label="节目预告：" :maxlength="1000" prop="arrangement">
-            <Input type="textarea" v-model="actReviseFormData.arrangement"></Input>
+            <div class="editor-container">
+              <quill-editor
+                ref="arrangeReEditor"
+                v-model="actReviseFormData.arrangement"
+                :options="myArrReOptions"
+              ></quill-editor>
+              <Upload
+                :action="ediUploadUrl"
+                ref="arrEditorReUpload"
+                class="arrEditorReUp"
+                :on-success="reArrHandleEdiSuccess"
+                :format="['jpg','jpeg','png','bmp']"
+                :on-format-error="handleEdiFormatError"
+                :before-upload="handleEdiBefore"
+                style="display: none"
+              >
+                <Button>点击上传</Button>
+              </Upload>
+            </div>
           </FormItem>
           <FormItem style="width: 200px!important;">
             <Button type="primary" @click="actReviseSubClick" :loading="revisingAct">确定修改</Button>
@@ -232,6 +338,21 @@
         </Form>
       </div>
     </Drawer>
+    <!--填写推送消息-->
+    <Modal
+      v-model="isPropel"
+      :loading="propelLoading"
+      :mask-closable="false"
+      title="推送消息"
+      @on-ok="proSub"
+      @on-visible-change="isProVisible"
+    >
+      <Form :model="proFormData" ref="proForm" :rules="ruleValidatePro" :label-width="100" class="mt20">
+        <FormItem label="消息内容：" prop="message">
+          <Input type="textarea" v-model="proFormData.message"></Input>
+        </FormItem>
+      </Form>
+    </Modal>
     <Modal
       title="提示"
       v-model="actTip"
@@ -260,6 +381,33 @@
 <script>
   import axios from "@/axios/axios";
   import * as base from '../../axios/base';
+  import { quillEditor } from 'vue-quill-editor';
+  import * as Quill from 'quill';
+  import index from "@/router";
+  const fonts = ['SimSun', 'SimHei','Microsoft-YaHei','KaiTi','FangSong','Arial','Times-New-Roman','sans-serif'];
+  const Font = Quill.import('formats/font');
+  Font.whitelist = fonts; //将字体加入到白名单
+  Quill.register(Font, true);
+  const toolbarOptions= [
+    ['bold', 'italic', 'underline', 'strike'],
+    ['blockquote', 'code-block'],
+
+    [{ 'header': 1 }, { 'header': 2 }],
+    [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+    [{ 'script': 'sub'}, { 'script': 'super' }],
+    [{ 'indent': '-1'}, { 'indent': '+1' }],
+    [{ 'direction': 'rtl' }],
+
+    [{ 'size': ['small', false, 'large', 'huge'] }],
+    [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+
+    [{ 'color': [] }, { 'background': [] }],
+    [{ 'font': fonts }],
+    [{ 'align': [] }],
+
+    ['clean'],
+    ['link','image']
+  ];
   export default {
     name: "act",
     data () {
@@ -306,8 +454,18 @@
           callback();
         }
       };
+      const validatePrice = (rule,value,callback) => {
+        if (value === null) {
+          callback(new Error('请填写节目费用'));
+        } else {
+          callback();
+        }
+      };
       return {
         uploadUrl:base.baseUrl.serviceOne + 'column_program/saveFile',
+        ediUploadUrl:base.baseUrl.serviceOne + 'gift/saveGiftFile',//编辑器插入图片上传接口 和礼物配置一个接口
+        isPropel:false,
+        propelLoading:true,
         actAddValue:false,
         actDetailValue:false,
         actReviseValue:false,
@@ -354,7 +512,9 @@
           num:null,
           description:'',
           arrangement:'',
-          filePath:[]
+          filePath:[],
+          price:null,
+          isShowPay:'1'
         },
         //详情数据
         actDetailDate:{
@@ -366,6 +526,7 @@
           num:'',
           description:'',
           arrangement:'',
+          price:''
         },
         //修改数据
         actReviseVisible:false,
@@ -383,7 +544,9 @@
           arrangement:'',
           filePath:[],
           delFilePath:[],
-          id:''
+          id:'',
+          price:null,
+          isShowPay:'1'
         },
         //类型数据
         dataList:[
@@ -451,7 +614,7 @@
             title:'操作选项',
             key:'action',
             align:'center',
-            width:300,
+            width:340,
             render:(h,params) => {
                if (params.row.status === 0) {
                 return h('div', [
@@ -554,7 +717,24 @@
                         this.$router.push({path:'/actSignList',query:{actId:params.row.id}})
                       }
                     }
-                  }, '报名清单')
+                  }, '报名清单'),
+                  h('Button', {
+                    props: {
+                      type: 'success',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+                        this.proFormData.activityId = params.row.id;
+                        //this.proFormData.webUrl = 'http://yys.zhongwei-info.com:8001/blindDateApp/view/tvProgram/h5_matchmaker_tvProgram.html?id='+params.row.id+'&actType=3&articleType=7&fromHome=2';
+                        this.proFormData.webUrl = 'http://192.168.1.197:8888/blindDateApp/view/tvProgram/h5_matchmaker_tvProgram.html?id='+params.row.id+'&actType=3&articleType=7&fromHome=2';
+                        this.isPropel = true;
+                      }
+                    }
+                  }, '推送'),
                 ])
               } else if (params.row.status === 1) {
                 return h('div', [
@@ -606,7 +786,94 @@
           arrangement:[
             {validator:validateArrangement}
           ],
-        }
+          price:[
+            {validator:validatePrice}
+          ]
+        },
+        //节目介绍 节目预告编辑器
+        myOptions:{
+          placeholder:'请编写节目介绍',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.editorUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        myArrOptions:{
+          placeholder:'请编写节目预告',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.arrEditorUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        //节目介绍 节目预告修改编辑器option
+        myReOptions:{
+          placeholder:'请编写节目介绍',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.editorReUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        myArrReOptions:{
+          placeholder:'请编写节目预告',
+          theme:'snow',
+          modules:{
+            toolbar:{
+              container:toolbarOptions,
+              handlers:{
+                image:function (value) {
+                  if (value) {
+                    document.querySelector('.arrEditorReUp input').click();
+                  } else {
+                    this.quill.format('image',false);
+                  }
+                }
+              }
+            }
+          }
+        },
+        proFormData:{
+          activityId:'',
+          message:'',
+          webUrl:''
+        },
+        ruleValidatePro:{
+          message:[
+            {required:true,message:'请填写信息内容'}
+          ]
+        },
       }
     },
     mounted () {
@@ -759,8 +1026,11 @@
               this.actDetailDate.slogan = res.result.slogan;
               this.actDetailDate.method = res.result.participate;
               this.actDetailDate.num = res.result.num;
+              this.actDetailDate.price = res.result.price;
               this.actDetailDate.description = res.result.description;
               this.actDetailDate.arrangement = res.result.arrangement;
+              this.$refs.des.innerHTML =  this.actDetailDate.description;
+              this.$refs.arrange.innerHTML = this.actDetailDate.arrangement;
               this.actDetailValue = true;
             } else {
               this.actTip = true;
@@ -777,6 +1047,7 @@
       getActReviseMessage:function (id) { //获取原信息
         axios.ActDetail({id:id})
           .then(res => {
+            console.log(res);
             if (res.code === 200) {
               if (res.result.filePaths != null && res.result.filePaths !== '') {
                 let arr = res.result.filePaths.split(',');
@@ -793,6 +1064,8 @@
               this.actReviseFormData.slogan = res.result.slogan;
               this.actReviseFormData.participate = res.result.participate;
               this.actReviseFormData.num = res.result.num;
+              this.actReviseFormData.price = res.result.price;
+              this.actReviseFormData.isShowPay = res.result.isShowPay.toString();
               this.actReviseFormData.description = res.result.description;
               this.actReviseFormData.arrangement = res.result.arrangement;
               this.actReviseId = id;
@@ -807,7 +1080,6 @@
             this.actTip = true;
             this.$refs.actTip.innerHTML = '查询出错！'
           });
-        this.actReviseValue = true;
       },
       actReviseHandleView:function (url) { //修改看大图
         this.actReviseImgUrl = url;
@@ -836,7 +1108,6 @@
               this.actReviseFormData.filePath.push(item.url);
             });
             this.revisingAct = true;
-            //console.log(JSON.stringify(this.actReviseFormData));
             axios.ActRevise(this.actReviseFormData)
               .then(res => {
                 if (res.code === 200) {
@@ -874,6 +1145,7 @@
       //清空表单
       clearActAdd:function () { //新增清空
         this.actFormData.filePath = [];
+        this.actFormData.isShowPay = '1';
         this.$refs.actUpload.clearFiles();
         this.uploadList = this.$refs.actUpload.fileList;
         this.$refs.actFormData.resetFields();
@@ -886,7 +1158,8 @@
         this.actDetailDate.method = '';
         this.actDetailDate.num = '';
         this.actDetailDate.description = '';
-        this.actDetailDate.arrangement = ''
+        this.actDetailDate.arrangement = '';
+        this.actDetailDate.price = ''
       },
       clearActRevise:function () { //修改清空
         this.$refs.actReviseUpload.clearFiles();
@@ -895,6 +1168,7 @@
         this.actReviseDefaultList = [];
         this.actReviseFormData.filePath = [];
         this.actReviseFormData.delFilePath = [];
+        this.actReviseFormData.isShowPay = '1';
         this.actReviseImgUrl = '';
         this.actReviseId = '';
       },
@@ -905,7 +1179,7 @@
       goActList:function () { //发布成功返回列表
         this.clearActAdd();
         this.actSuccess = false;
-        this.actAddValue = false
+        this.actAddValue = false;
         this.actCheckData.createTimeStart = '';
         this.actCheckData.createTimeEnd= '';
         this.actCheckData.name = '';
@@ -924,7 +1198,119 @@
         this.actCheckData.pageNum = 1;
         this.actCheckData.pageSize = 10;
         this.getActList();
-      }
+      },
+      //富文本编辑器
+      //景区介绍编辑器上传图片
+      handleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.myEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //行程安排编辑器上传图片
+      arrHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.arrangeEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //活动介绍修改插入图片
+      reHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.myReEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //活动安排修改插入图片
+      reArrHandleEdiSuccess:function (res,file,fileList) {
+        //编辑器实例
+        let quill = this.$refs.arrangeReEditor.quill;
+        if (res.code === '0') {
+          //获取光标位置
+          let length = quill.getSelection().index;
+          //插入图片
+          quill.insertEmbed(length,'image',res.data);
+          //将光标调整到最后
+          quill.setSelection(length+1);
+        } else {
+          this.$Message.warning('图片插入失败！');
+        }
+      },
+      //格式限制
+      handleEdiFormatError:function () {
+        this.$Message.warning('请选择格式为“jpg，jpeg，png，bmp”格式的图片！');
+      },
+      handleEdiBefore:function (file) {
+        const len = file.name.length <= 50;
+        if (!len) {
+          this.$Message.warning('图片名过长！');
+        }
+        return len;
+      },
+      proSub:function () {
+        this.$refs.proForm.validate(valid => {
+          if (valid) {
+            axios.PropelTvActivity(this.proFormData)
+              .then(res => {
+                //console.log(res);
+                if (res.code === '0') {
+                  this.isPropel = false;
+                  this.actTip = true;
+                  this.$refs.actTip.innerHTML = '推送成功！';
+                } else {
+                  this.changModal();
+                  this.actTip = true;
+                  this.$refs.actTip.innerHTML = '推送失败！';
+                }
+              })
+              .catch(error => {
+                console.log(error);
+                this.changModal();
+                this.actTip = true;
+                this.$refs.actTip.innerHTML = '推送失败！';
+              })
+          } else {
+            this.changModal();
+          }
+        });
+      },
+      isProVisible:function (value) {
+        if (!value) {
+          this.proFormData.activityId = '';
+          this.proFormData.webUrl = '';
+          this.$refs.proForm.resetFields();
+        }
+      },
+      changModal:function () {
+        this.propelLoading = false;
+        this.$nextTick(() => {
+          this.propelLoading = true;
+        });
+      },
     }
   }
 </script>

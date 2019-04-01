@@ -8,9 +8,9 @@
         </div>
         <div class="ticket-search">
           <span class="ml15">创建日期从：</span>
-          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseTicketStart" v-model="ticketCheckData.createTimeStart" :options="begOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker type="date" format="yyyy-MM-dd" @on-change="chooseTicketStart" :options="begOption" class="checkWid"></DatePicker></span>
           <span class="ml15">创建日期止：</span>
-          <span><DatePicker format="yyyy-MM-dd" @on-change="chooseTicketEnd" type="date" v-model="ticketCheckData.createTimeEnd" :options="endOption" class="checkWid"></DatePicker></span>
+          <span><DatePicker format="yyyy-MM-dd" @on-change="chooseTicketEnd" type="date" :options="endOption" class="checkWid"></DatePicker></span>
           <span class="ml15">活动券名称：</span>
           <span><Input v-model="ticketCheckData.name" class="checkWid"/></span>
           <span class="ml15">状态类型：</span>
@@ -43,18 +43,18 @@
       </div>
       <div class="add-form mt30">
       <Form :model="ticketData" ref="ticketData" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
-        <FormItem label="活动类型：" prop="actType">
+        <FormItem label="活动类型：">
           <Select v-model="ticketData.actType" @on-change="getAct" style="width:100%;" >
             <Option v-for="(item,index) in actType" :value="item.value" :key="index">{{ item.label }}</Option>
           </Select>
         </FormItem>
-        <FormItem label="活动名称：" prop="actId">
+        <FormItem label="关联活动：">
           <Select v-model="ticketData.actId" style="width:100%;" >
             <Option v-for="(item,index) in actList" :value="item.actId" :key="index">{{ item.actName }}</Option>
           </Select>
         </FormItem>
         <FormItem label="活动券名：" prop="name">
-          <Input type="text" v-model="ticketData.name"></Input>
+          <Input type="text" v-model="ticketData.name" :maxlength="20"></Input>
         </FormItem>
         <FormItem label="活动券类型：" prop="type">
           <Select v-model="ticketData.type" style="width:100%;" >
@@ -63,6 +63,12 @@
         </FormItem>
         <FormItem label="发放数量：" prop="num">
           <InputNumber  v-model="ticketData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
+        </FormItem>
+        <FormItem label="优惠价格：" prop="price">
+          <InputNumber  v-model="ticketData.price" :max="100000" :min="0" style="width: 85%;"></InputNumber><span class="ml10">玄乐币</span>
+        </FormItem>
+        <FormItem label="有效期至：">
+          <DatePicker type="date" format="yyyy-MM-dd" v-model="ticketData.startTime" :options="addEndOption" @on-change="startTimeChoose" style="width: 100%"></DatePicker>
         </FormItem>
         <FormItem style="width: 200px!important;">
           <Button type="primary" @click="ticketSub" :loading="ticketAdding">发布活动券</Button>
@@ -88,10 +94,18 @@
         <p class="p">活动券名称：</p>
         <p class="detailSpan">{{ticDetailData.name}}</p>
       </div>
-      <div class="add-detail">
-        <p class="p">活动时间：</p>
-        <p class="detailSpan">{{ticDetailData.startTime}}</p>
-      </div>
+      <template v-if="ticDetailData.mold === 0">
+        <div class="add-detail">
+          <p class="p">活动时间：</p>
+          <p class="detailSpan">{{ticDetailData.startTime}}</p>
+        </div>
+      </template>
+      <template v-else>
+        <div class="add-detail">
+          <p class="p">有效期至：</p>
+          <p class="detailSpan">{{ticDetailData.startTime}}</p>
+        </div>
+      </template>
       <div class="add-detail">
         <p class="p">活动地址：</p>
         <p class="detailSpan">{{ticDetailData.address}}</p>
@@ -99,6 +113,10 @@
       <div class="add-detail">
         <p class="p">发放数量：</p>
         <p class="detailSpan">{{ticDetailData.num}}</p>
+      </div>
+      <div class="add-detail">
+        <p class="p">优惠价格：</p>
+        <p class="detailSpan">{{ticDetailData.price}}</p>
       </div>
       <div class="add-detail">
         <p class="p">已领取：</p>
@@ -121,11 +139,19 @@
       </div>
       <Form :model="ticketReviseData" ref="ticketRevise" :rules="ruleValidate" :label-width="100" style="width: 500px;margin-top: 20px;">
         <FormItem label="活动券名：" prop="name">
-          <Input type="text" v-model="ticketReviseData.name"></Input>
+          <Input type="text" v-model="ticketReviseData.name" :maxlength="20"></Input>
         </FormItem>
         <FormItem label="发放数量：" prop="num">
           <InputNumber v-model="ticketReviseData.num" :max="100000" :min="0" style="width: 100%;"></InputNumber>
         </FormItem>
+        <FormItem label="优惠价格：" prop="price">
+          <InputNumber  v-model="ticketReviseData.price" :max="100000" :min="0" style="width: 85%;"></InputNumber><span class="ml10">玄乐币</span>
+        </FormItem>
+        <template v-if="ticketReviseData.mold === 1">
+          <FormItem label="有效期至：">
+            <DatePicker type="date" format="yyyy-MM-dd" v-model="ticketReviseData.startTime" :options="addEndOption" @on-change="startTimeChooseRe" style="width: 100%;"></DatePicker>
+          </FormItem>
+        </template>
         <FormItem style="width: 200px!important;">
           <Button type="primary" @click="ticketReviseSub" :loading="ticketRevise">确定修改</Button>
         </FormItem>
@@ -198,6 +224,10 @@
         //活动类型
         actType:[
           {
+            value:3,
+            label:'不限'
+          },
+          {
             value:1,
             label:'相亲专栏'
           },
@@ -250,22 +280,29 @@
           actId:'',
           name:'',
           type:'',
-          num:null
+          num:null,
+          price:0,
+          startTime:''
         },
         //详情
         ticDetailData:{
+          mold:0,
           name:'',
           startTime:'',
           address:'',
           num:'',
+          price:'',
           enterNum:''
         },
         //修改
         ticId:'',
         ticketReviseData:{
+          mold:0,
           id:'',
           name:'',
-          num:null
+          num:null,
+          price:null,
+          startTime:''
         },
         columns:[
           {
@@ -304,6 +341,11 @@
             align:'center'
           },
           {
+            title:'优惠价格',
+            key:'price',
+            align:'center'
+          },
+          {
             title:'活动地址',
             key:'address',
             align:'center'
@@ -317,7 +359,7 @@
             title:'操作选项',
             key:'action',
             align:'center',
-            width:260,
+            width:300,
             render:(h,params) => {
               if (params.row.status === 0) {
                 return h('div',[
@@ -359,7 +401,6 @@
                     },
                     on:{
                       click: () => {
-                        //console.log(params.row.id);
                         axios.TicketCancel({id:params.row.id})
                           .then(res => {
                             this.ticTip = true;
@@ -390,6 +431,22 @@
                       }
                     }
                   },'领取清单'),
+                  /*
+                  h('Button', {
+                    props: {
+                      type: 'success',
+                      size: 'small'
+                    },
+                    style: {
+                      marginRight: '5px'
+                    },
+                    on: {
+                      click: () => {
+
+                      }
+                    }
+                  }, '推送'),
+                  */
                 ])
               } else if (params.row.status === 1) {
                 return h('div', [
@@ -436,8 +493,19 @@
           ],
           num:[
             {required:true,message:'请填写发放数量'}
+          ],
+          // price:[
+          //   {required:true,message:'请填写优惠价格'}
+          // ],
+          startTime:[
+            {required:true,message:'请填写有效日期'}
           ]
-        }
+        },
+        addEndOption:{
+          disabledDate : date =>  {
+            return date && date.valueOf() < Date.now() - 24*60*60*1000;
+          }
+        },
       }
     },
     mounted () {
@@ -453,7 +521,6 @@
         axios.TicketList(this.ticketCheckData)
           .then(res => {
             //console.log(res);
-            //console.log(JSON.stringify(res.result.list[0]));
             if (res.code === 200) {
               this.listData = res.result.list;
               this.total = res.result.total;
@@ -471,6 +538,7 @@
       },
       getAct:function () { //根据活动类型获取活动列表
         if (this.value2) {
+          this.ticketData.actId = '';
           axios.TicketGetActList({actType:this.ticketData.actType})
             .then(res => {
               //console.log(res);
@@ -505,13 +573,16 @@
         this.getTicketList();
       },
       //新增
+      startTimeChoose:function (date) {
+        this.ticketData.startTime = date;
+      },
       ticketSub:function () { //新增提交
         this.$refs.ticketData.validate(valid => {
           if (valid) {
             this.ticketAdding = true;
             axios.TicketAdd(this.ticketData)
               .then(res => {
-                console.log(res);
+                //console.log(res);
                 this.ticketAdding = false;
                 if (res.code === 200) {
                   this.ticSuccess = true;
@@ -534,12 +605,14 @@
       getTicketDetail:function(id){
         axios.TicketDetail({id:id})
           .then(res => {
-            //console.log(res);
+            console.log(res);
             if (res.code === 200) {
+              this.ticDetailData.mold = res.result.mold;
               this.ticDetailData.name = res.result.name;
               this.ticDetailData.address = res.result.address;
               this.ticDetailData.startTime = res.result.startTime;
               this.ticDetailData.num = res.result.num;
+              this.ticDetailData.price = res.result.price;
               this.ticDetailData.enterNum = res.result.enterNum;
               this.delValue = true;
             } else {
@@ -554,13 +627,20 @@
           })
       },
       //修改
+      startTimeChooseRe:function (date) {
+        this.ticketReviseData.startTime = date;
+      },
       ticketReviseMes:function (id) {
         this.ticId = id;
         axios.TicketDetail({id:id})
           .then(res => {
+            console.log(res);
             if (res.code === 200) {
+              this.ticketReviseData.mold = res.result.mold;
               this.ticketReviseData.name = res.result.name;
               this.ticketReviseData.num = res.result.num;
+              this.ticketReviseData.price = res.result.price;
+              this.ticketReviseData.startTime = res.result.startTime;
               this.reviseValue = true;
             } else {
               this.ticTip = true;
@@ -576,6 +656,7 @@
       ticketReviseSub:function () { //提交修改
         this.ticketRevise = true;
         this.ticketReviseData.id = this.ticId;
+        this.ticketReviseData.startTime = this.$trans.timeTranslate(this.ticketReviseData.startTime);
         axios.TicketRevise(this.ticketReviseData)
           .then(res => {
             //console.log(res);
@@ -598,7 +679,10 @@
       },
       //清空表单
       clearTicketForm:function () {  //清空新增
+        this.ticketData.actType = '';
+        this.ticketData.actId = '';
         this.actList = [];
+        this.ticketData.startTime = '';
         this.$refs.ticketData.resetFields();
       },
       clearTicketDetail:function () { //清空详情
@@ -628,6 +712,11 @@
       },
       addTicMore:function () {
         // this.clearTicketForm();
+        //this.ticketData.actType = '';
+        this.ticketData.actId = '';
+        this.ticketData.startTime = '';
+        this.ticketData.price = 0;
+        // this.actList = [];
         this.reSetForm();
         this.ticSuccess = false;
         this.ticketCheckData.name = '';
