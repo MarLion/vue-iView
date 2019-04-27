@@ -396,9 +396,9 @@
         }
       };
       return {
-        uploadUrl:base.baseUrl.serviceOne + 'column_activity/saveFile',//电视台相亲上传图片接口
-        ediUploadUrl:base.baseUrl.serviceOne + 'gift/saveGiftFile', //单个图片上传 用礼物上传图片接口 多张图片上传 用相亲专栏图片上传接口
-        videoUploadUrl:base.baseUrl.serviceOne + 'documents/saveCommonVideoFile',
+        uploadUrl:base.baseUrl.serviceTwo + 'documents/saveFiles',//电视台相亲上传图片接口
+        ediUploadUrl:base.baseUrl.serviceTwo + 'documents/saveFiles', //单个图片上传 用礼物上传图片接口 多张图片上传 用相亲专栏图片上传接口
+        videoUploadUrl:base.baseUrl.serviceTwo + 'documents/saveFiles',
         total:'',
         loading:false,
         artValue:false,
@@ -444,7 +444,8 @@
           type:'',
           status:'',
           page:1,
-          size:10
+          size:10,
+          owenrId:''
         },
         artStatusList:[
           {
@@ -485,7 +486,8 @@
           backPicList:[],
           content:'',
           videoPath:'',
-          recomment:'0'
+          recomment:'0',
+          owenrId:''
         },
         uploadList:[],
         visible:false,
@@ -512,7 +514,8 @@
           backPicList:[],
           content:'',
           videoPath:'',
-          recomment:'0'
+          recomment:'0',
+          owenrId:''
         },
         reUploadList:[],
         dataDefault:[],
@@ -914,11 +917,22 @@
       }
     },
     mounted () {
+      if (sessionStorage.getItem('userId') != null) {
+        this.$store.state.user_id = sessionStorage.getItem('userId');
+      }
+      this.listParams.owenrId = this.userId;
+      this.artFormData.owenrId = this.userId;
+      this.artReFormData.owenrId = this.userId;
       this.uploadList = this.$refs.artUpload.fileList;
       this.videoUploadList = this.$refs.videoUpload.fileList;
       this.getArticleList();
       this.getCheckParams();
       this.getCheckParamsSec();
+    },
+    computed:{
+      userId:function () {
+        return this.$store.state.user_id;
+      }
     },
     methods:{
       //获取查询条件一二级层级
@@ -1040,7 +1054,7 @@
       //上传封面
       handleSuccess:function (res,file,fileList) {
         if (res.code === 200) {
-          file.url = res.result[0].filePath;
+          file.url = res.result;
         } else {
           this.artTip = true;
           this.$refs.artTip.innerHTML = '封面上传失败！'
@@ -1074,11 +1088,11 @@
       handleEdiSuccess:function (res,file,fileList) {
         //编辑器实例
         let quill = this.$refs.myEditor.quill;
-        if (res.code === '0') {
+        if (res.code === 200) {
           //获取光标位置
           let length = quill.getSelection().index;
           //插入图片
-          quill.insertEmbed(length,'image',res.data);
+          quill.insertEmbed(length,'image',res.result);
           //将光标调整到最后
           quill.setSelection(length+1);
         } else {
@@ -1108,8 +1122,8 @@
       },
       handleVideoSuccess:function (res,file,fileList) {
         if (res.code === 200) {
-          file.url = res.result.filePath;
-          this.artFormData.videoPath = res.result.filePath;
+          file.url = res.result;
+          this.artFormData.videoPath = res.result;
         } else {
           this.artTip = true;
           this.$refs.artTip.innerHTML = '视频上传失败！'
@@ -1173,7 +1187,7 @@
       handleReSuccess:function (res,file,fileList) {
         //console.log(res);
         if (res.code === 200) {
-          file.url = res.result[0].filePath;
+          file.url = res.result;
           this.reUploadList = fileList;
         } else {
           this.artTip = true;
@@ -1197,11 +1211,11 @@
       handleReEdiSuccess:function (res,file,fileList) {
         //编辑器实例
         let quill = this.$refs.myReEditor.quill;
-        if (res.code === '0') {
+        if (res.code === 200) {
           //获取光标位置
           let length = quill.getSelection().index;
           //插入图片
-          quill.insertEmbed(length,'image',res.data);
+          quill.insertEmbed(length,'image',res.result);
           //将光标调整到最后
           quill.setSelection(length+1);
         } else {
@@ -1232,8 +1246,8 @@
       },
       handleReVideoSuccess:function (res,file,fileList) {
         if (res.code === 200) {
-          file.url = res.result.filePath;
-          this.artReFormData.videoPath = res.result.filePath;
+          file.url = res.result;
+          this.artReFormData.videoPath = res.result;
           this.reVideoUploadList = fileList;
           if (this.artReFormData.content === '') {
             this.artReFormData.type = 1;
@@ -1407,5 +1421,11 @@
     img{
       text-align:center
     }
+  }
+  .editor-container{
+    height: 500px;
+  }
+  .quill-editor{
+    height: 400px;
   }
 </style>

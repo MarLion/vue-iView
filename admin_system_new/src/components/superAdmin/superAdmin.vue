@@ -8,189 +8,233 @@
     </div>
     <div class="configure-name mt30">设置权限：</div>
     <div class="configure-container mt30">
-      <span class="mt20">红娘：</span>
-      <div class="mt20">
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isData" @on-change="dataRoot"><Icon type="ios-arrow-down"></Icon>数据看板</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isDataUser" @on-change="dataSys">用户统计</Checkbox>
-          </dd>
-        </dl>
-      </div>
-      <div class="mt20">
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isFriSys" @on-change="friRoot"><Icon type="ios-arrow-down"></Icon>交友系统管理</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isFriSysCommunity" @on-change="friSys">话题管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriSysActivity" @on-change="friSys">活动管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriGift" @on-change="friSys">礼物配置</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriLabel" @on-change="friSys">标签配置</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriPosition" @on-change="friSys">地理位置配置</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriQuestion" @on-change="friSys">题库配置</Checkbox>
-          </dd>
-          <!--<dd class="mt20">-->
+      <div class="configure-div">
+        <span class="mt20">红娘：</span>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isData" @on-change="dataRoot"><Icon type="ios-arrow-down"></Icon>数据看板</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isDataUser" @on-change="dataSys">用户统计</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isFriSys" @on-change="friRoot"><Icon type="ios-arrow-down"></Icon>交友系统管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isFriSysCommunity" @on-change="friSys">话题管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriSysActivity" @on-change="friSys">活动管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriGift" @on-change="friSys">礼物配置</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriLabel" @on-change="friSys">标签配置</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriPosition" @on-change="friSys">地理位置配置</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriQuestion" @on-change="friSys">题库配置</Checkbox>
+            </dd>
+            <!--<dd class="mt20">-->
             <!--<Checkbox v-model="isFriFirst" @on-change="friSys">模块层级管理</Checkbox>-->
-          <!--</dd>-->
-          <!--<dd class="mt20">-->
+            <!--</dd>-->
+            <!--<dd class="mt20">-->
             <!--<Checkbox v-model="isFriArticle" @on-change="friSys">文章管理</Checkbox>-->
-          <!--</dd>-->
-          <dd class="mt20">
-            <Checkbox v-model="isFriBanner" @on-change="friSys">Banner图管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriTrends" @on-change="friSys">动态管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriStartPage" @on-change="friSys">启动页管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriRecord" @on-change="friSys">履历管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriMessage" @on-change="friSys">系统消息管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriMessageIcon" @on-change="friSys">推送图标管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isFriStyle" @on-change="friSys">寻姻缘风格管理</Checkbox>
-          </dd>
-        </dl>
+            <!--</dd>-->
+            <dd class="mt20">
+              <Checkbox v-model="isFriBanner" @on-change="friSys">Banner图管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriTrends" @on-change="friSys">动态管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriStartPage" @on-change="friSys">启动页管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriRecord" @on-change="friSys">履历管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriMessage" @on-change="friSys">系统消息管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriMessageIcon" @on-change="friSys">推送图标管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isFriStyle" @on-change="friSys">寻姻缘风格管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isTvSys" @on-change="tvRoot"><Icon type="ios-arrow-down"></Icon>湖北电视台专栏管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isTvRoute" @on-change="tvSys">旅游线路管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isTvDate" @on-change="tvSys">相亲专栏管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isTvAct" @on-change="tvSys">节目专栏管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isTvTicket" @on-change="tvSys">活动券管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isTvBanner" @on-change="tvSys">Banner管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
       </div>
-      <div class="mt20">
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isTvSys" @on-change="tvRoot"><Icon type="ios-arrow-down"></Icon>湖北电视台专栏管理</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isTvRoute" @on-change="tvSys">旅游线路管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isTvDate" @on-change="tvSys">相亲专栏管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isTvAct" @on-change="tvSys">节目专栏管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isTvTicket" @on-change="tvSys">活动券管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isTvBanner" @on-change="tvSys">Banner管理</Checkbox>
-          </dd>
-        </dl>
-      </div>
-      <span class="mt20 ml100">营养师：</span>
-      <div class="mt20">
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isYysSys" @on-change="yysRoot"><Icon type="ios-arrow-down"></Icon>营养师系统管理</Checkbox>
-          </dt>
-          <!--<dd class="mt20">-->
+      <div class="configure-div ml100">
+        <span class="mt20">营养师：</span>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isYysSys" @on-change="yysRoot"><Icon type="ios-arrow-down"></Icon>营养师系统管理</Checkbox>
+            </dt>
+            <!--<dd class="mt20">-->
             <!--<Checkbox v-model="isYysKnow" @on-change="yysSys">健康文化管理</Checkbox>-->
-          <!--</dd>-->
-          <dd class="mt20">
-            <Checkbox v-model="isYysProduct" @on-change="yysSys">商品资料上传</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isYysCoupon" @on-change="yysSys">优惠券管理</Checkbox>
-          </dd>
-          <!--<dd class="mt20">-->
+            <!--</dd>-->
+            <dd class="mt20">
+              <Checkbox v-model="isYysProduct" @on-change="yysSys">商品资料上传</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isYysCoupon" @on-change="yysSys">优惠券管理</Checkbox>
+            </dd>
+            <!--<dd class="mt20">-->
             <!--<Checkbox v-model="isYysKnowClass" @on-change="yysSys">健康文化分类管理</Checkbox>-->
-          <!--</dd>-->
-          <!--<dd class="mt20">-->
+            <!--</dd>-->
+            <!--<dd class="mt20">-->
             <!--<Checkbox v-model="isYysGuideClass" @on-change="yysSys">小常识分类管理</Checkbox>-->
-          <!--</dd>-->
-          <dd class="mt20">
-            <Checkbox v-model="isYysBanner" @on-change="yysSys">Banner图管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isYysTrend" @on-change="yysSys">健康动态管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isYysQuestion" @on-change="yysSys">健康问答管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isYysKey" @on-change="yysSys">搜索关键词管理</Checkbox>
-          </dd>
-        </dl>
+            <!--</dd>-->
+            <dd class="mt20">
+              <Checkbox v-model="isYysBanner" @on-change="yysSys">Banner图管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isYysTrend" @on-change="yysSys">健康动态管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isYysQuestion" @on-change="yysSys">健康问答管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isYysKey" @on-change="yysSys">搜索关键词管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
       </div>
-      <span class="mt20 ml100">系统管理：</span>
-      <div class="mt20">
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isSysSys" @on-change="sysRoot"><Icon type="ios-arrow-down"></Icon>组织架构系统管理</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isSysUsers" @on-change="sysSys">用户信息管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isSysOrganization" @on-change="sysSys">组织架构管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isSysApartment" @on-change="sysSys">部门管理</Checkbox>
-          </dd>
-        </dl>
+      <div class="configure-div ml100">
+        <span class="mt20">系统管理：</span>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isSysSys" @on-change="sysRoot"><Icon type="ios-arrow-down"></Icon>组织架构系统管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isSysUsers" @on-change="sysSys">用户信息管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isSysOrganization" @on-change="sysSys">组织架构管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isSysApartment" @on-change="sysSys">部门管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isVersionSys" @on-change="versionRoot"><Icon type="ios-arrow-down"></Icon>APK管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isVersionNum" @on-change="versionSys">版本号管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
       </div>
-      <span class="mt20 ml100">新闻管理：</span>
-      <div class="mt20">
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isMarriageNewsSys" @on-change="marriageRoot"><Icon type="ios-arrow-down"></Icon>寻姻缘新闻管理</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isMarriageModal" @on-change="marriageSys">寻姻缘模块管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isMarriageNews" @on-change="marriageSys">新闻发布管理</Checkbox>
-          </dd>
-        </dl>
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isYysNewsSys" @on-change="yysNewsRoot"><Icon type="ios-arrow-down"></Icon>营养师新闻管理</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isYysNewsClass" @on-change="yysNewsSys">健康文化分类管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isYysNewsGuideClass" @on-change="yysNewsSys">小常识分类管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isYysNews" @on-change="yysNewsSys">健康文化管理</Checkbox>
-          </dd>
-        </dl>
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isHospitalSys" @on-change="hospitalRoot"><Icon type="ios-arrow-down"></Icon>体检新闻管理</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isHospitalType" @on-change="hospitalSys">资讯类型管理</Checkbox>
-          </dd>
-          <dd class="mt20">
-            <Checkbox v-model="isHospitalNews" @on-change="hospitalSys">资讯发布管理</Checkbox>
-          </dd>
-        </dl>
-        <dl>
-          <dt class="text-left">
-            <Checkbox v-model="isNewsSys" @on-change="newsRoot"><Icon type="ios-arrow-down"></Icon>新闻资讯管理</Checkbox>
-          </dt>
-          <dd class="mt20">
-            <Checkbox v-model="isNewsSave" @on-change="newsSys">新闻发布管理</Checkbox>
-          </dd>
-        </dl>
+      <div class="configure-div">
+        <span class="mt20">新闻管理：</span>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isMarriageNewsSys" @on-change="marriageRoot"><Icon type="ios-arrow-down"></Icon>寻姻缘新闻管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isMarriageModal" @on-change="marriageSys">寻姻缘模块管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isMarriageNews" @on-change="marriageSys">新闻发布管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isYysNewsSys" @on-change="yysNewsRoot"><Icon type="ios-arrow-down"></Icon>营养师新闻管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isYysNewsClass" @on-change="yysNewsSys">健康文化分类管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isYysNewsGuideClass" @on-change="yysNewsSys">小常识分类管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isYysNews" @on-change="yysNewsSys">健康文化管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isHospitalSys" @on-change="hospitalRoot"><Icon type="ios-arrow-down"></Icon>体检新闻管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isHospitalType" @on-change="hospitalSys">资讯类型管理</Checkbox>
+            </dd>
+            <dd class="mt20">
+              <Checkbox v-model="isHospitalNews" @on-change="hospitalSys">资讯发布管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isNewsSys" @on-change="newsRoot"><Icon type="ios-arrow-down"></Icon>新闻资讯管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isNewsSave" @on-change="newsSys">新闻发布管理</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isHomeSys" @on-change="homeRoot"><Icon type="ios-arrow-down"></Icon>家乡资讯管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isHomeNews" @on-change="homeSys">家乡资讯发布</Checkbox>
+            </dd>
+          </dl>
+        </div>
+        <div class="mt20">
+          <dl>
+            <dt class="text-left">
+              <Checkbox v-model="isIndexSys" @on-change="keyRoot"><Icon type="ios-arrow-down"></Icon>关键词管理</Checkbox>
+            </dt>
+            <dd class="mt20">
+              <Checkbox v-model="isIndexKey" @on-change="keySys">首页搜索关键词</Checkbox>
+            </dd>
+          </dl>
+        </div>
       </div>
     </div>
     <div class="mt70 text-left configure-btn">
@@ -260,6 +304,9 @@
         isSysUsers:false,
         isSysOrganization:false,
         isSysApartment:false,
+        //版本号管理
+        isVersionSys:false,
+        isVersionNum:false,
         //寻姻缘新闻
         isMarriageNewsSys:false,
         isMarriageModal:false,
@@ -276,6 +323,12 @@
         //新闻
         isNewsSys:false,
         isNewsSave:false,
+        //家乡资讯
+        isHomeSys:false,
+        isHomeNews:false,
+        //首页搜索关键词
+        isIndexSys:false,
+        isIndexKey:false,
       }
     },
     mounted () {
@@ -429,7 +482,7 @@
               //新闻管理
               for (let i = 0; i < newsMenus.length; i++) {
                 if (newsMenus[i].group === '寻姻缘新闻管理') {
-                  this.isData = true;
+                  this.isMarriageNewsSys = true;
                   let items = newsMenus[i].items;
                   for (let j = 0; j <items.length; j++) {
                     if (items[j].name === '寻姻缘模块管理') {
@@ -441,7 +494,7 @@
                   }
                 }
                 if (newsMenus[i].group === '营养师新闻管理') {
-                  this.isData = true;
+                  this.isYysNewsSys = true;
                   let items = newsMenus[i].items;
                   for (let j = 0; j <items.length; j++) {
                     if (items[j].name === '健康文化分类管理') {
@@ -456,7 +509,7 @@
                   }
                 }
                 if (newsMenus[i].group === '体检新闻管理') {
-                  this.isData = true;
+                  this.isHospitalSys = true;
                   let items = newsMenus[i].items;
                   for (let j = 0; j <items.length; j++) {
                     if (items[j].name === '资讯类型管理') {
@@ -468,11 +521,29 @@
                   }
                 }
                 if (newsMenus[i].group === '新闻资讯管理') {
-                  this.isData = true;
+                  this.isNewsSys = true;
                   let items = newsMenus[i].items;
                   for (let j = 0; j <items.length; j++) {
                     if (items[j].name === '新闻发布管理') {
                       this.isNewsSave = true;
+                    }
+                  }
+                }
+                if (newsMenus[i].group === '家乡资讯管理') {
+                  this.isHomeSys = true;
+                  let items = newsMenus[i].items;
+                  for (let j = 0; j <items.length; j++) {
+                    if (items[j].name === '家乡资讯发布') {
+                      this.isHomeNews = true;
+                    }
+                  }
+                }
+                if (newsMenus[i].group === '关键词管理') {
+                  this.isIndexSys = true;
+                  let items = newsMenus[i].items;
+                  for (let j = 0; j <items.length; j++) {
+                    if (items[j].name === '首页搜索关键词') {
+                      this.isIndexKey = true;
                     }
                   }
                 }
@@ -491,6 +562,15 @@
                     }
                     if (items[j].name === '部门管理') {
                       this.isSysApartment = true;
+                    }
+                  }
+                  if (sysMenus[i].group === 'APK管理') {
+                    this.isVersionSys = true;
+                    let items = sysMenus[i].items;
+                    for (let j = 0; j < items.length; j++) {
+                      if (items[j].name === '版本号管理') {
+                        this.isVersionNum = true;
+                      }
                     }
                   }
                 }
@@ -546,6 +626,9 @@
         this.isSysOrganization = this.isSysSys;
         this.isSysApartment = this.isSysSys;
       },
+      versionRoot:function () {
+        this.isVersionNum = this.isVersionSys;
+      },
       marriageRoot:function () {
         this.isMarriageModal = this.isMarriageNewsSys;
         this.isMarriageNews = this.isMarriageNewsSys;
@@ -562,6 +645,12 @@
       newsRoot:function () {
         this.isNewsSave = this.isNewsSys;
       },
+      homeRoot:function () {
+        this.isHomeNews = this.isHomeSys;
+      },
+      keyRoot:function () {
+        this.isIndexKey = this.isIndexSys;
+      },
       dataSys:function () {
         this.isData = this.isDataUser;
       },
@@ -577,6 +666,9 @@
       sysSys:function () {
         this.isSysSys = this.isSysUsers || this.isSysOrganization || this.isSysApartment;
       },
+      versionSys:function () {
+        this.isVersionSys = this.isVersionNum;
+      },
       marriageSys:function () {
         this.isMarriageNewsSys = this.isMarriageModal || this.isMarriageNews;
       },
@@ -588,6 +680,12 @@
       },
       newsSys:function () {
         this.isNewsSys = this.isNewsSave;
+      },
+      homeSys:function () {
+        this.isHomeSys = this.isHomeNews;
+      },
+      keySys:function () {
+        this.isIndexSys = this.isIndexKey;
       },
       subConfigure:function () {
         let hnArr = [];
@@ -737,6 +835,7 @@
             group:'',
             items:[]
           };
+          yNewsObj.group = '营养师新闻管理';
           if (this.isYysNewsClass) {
             yNewsObj.items.push({name:'健康文化分类管理',path:'/configureHealthKnowledgeClass'});
           }
@@ -753,6 +852,7 @@
             group:'',
             items:[]
           };
+          hNewsObj.group = '体检新闻管理';
           if (this.isHospitalType) {
             hNewsObj.items.push({name:'资讯类型管理',path:'/configureHospitalNewsType'});
           }
@@ -766,10 +866,33 @@
             group:'',
             items:[]
           };
+          nNewsObj.group = '新闻资讯管理';
           if (this.isNewsSave) {
             nNewsObj.items.push({name:'新闻发布管理',path:'/configureNews'});
           }
           newsArr.push(nNewsObj);
+        }
+        if (this.isHomeSys) {
+          let hDewsObj = {
+            group:'',
+            items:[]
+          };
+          hDewsObj.group = '家乡资讯管理';
+          if (this.isHomeNews) {
+            hDewsObj.items.push({name:'家乡资讯发布',path:'/configureHomeNews'});
+          }
+          newsArr.push(hDewsObj);
+        }
+        if (this.isIndexSys) {
+          let iKewsObj = {
+            group:'',
+            items:[]
+          };
+          iKewsObj.group = '关键词管理';
+          if (this.isIndexKey) {
+            iKewsObj.items.push({name:'首页搜索关键词',path:'/configureIndexKey'});
+          }
+          newsArr.push(iKewsObj);
         }
         //系统设置
         if (this.isSysSys) {
@@ -788,6 +911,17 @@
             obj3.items.push({name:'部门管理',path:'/configureApartment'});
           }
           sysArr.push(obj3);
+        }
+        if (this.isVersionSys) {
+          let verObj = {
+            group:'',
+            items:[]
+          };
+          verObj.group = 'APK管理';
+          if (this.isVersionNum) {
+            verObj.items.push({name:'版本号管理',path:'/configureVersion'});
+          }
+          sysArr.push(verObj);
         }
         this.configureData = {
           HNmenus:hnArr,
@@ -846,10 +980,16 @@
         this.isYysKey =false;
         this.isSysSys = false;
         this.isSysUsers = false;
+        this.isVersionSys = false;
+        this.isVersionNum = false;
         this.isSysApartment = false;
         this.isSysOrganization = false;
         this.isNewsSys = false;
         this.isNewsSave = false;
+        this.isHomeSys = false;
+        this.isHomeNews = false;
+        this.isIndexSys = false;
+        this.isIndexKey = false;
       },
       del:function () {
         this.configureTip = false;
@@ -874,16 +1014,23 @@
     height: 600px;
     border: 1px solid #cccccc;
     overflow-y: scroll;
-    div{
-      margin-left: 30px;
-      dl{
-        padding-bottom: 20px;
-      }
-      dd{
-        text-align: left;
-        padding-left: 15px;
+    .configure-div{
+      display: flex;
+      flex-direction: row;
+      justify-content: flex-start;
+      flex-wrap: wrap;
+      div{
+        margin-left: 30px;
+        dl{
+          padding-bottom: 20px;
+        }
+        dd{
+          text-align: left;
+          padding-left: 15px;
+        }
       }
     }
+
   }
   .configure-btn{
     padding-left: 30px;

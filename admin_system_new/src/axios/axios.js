@@ -983,6 +983,16 @@ export default {
     return fetch(base.baseUrl.serviceFive + 'newArticle/getNewType',params);
   },
 
+  //更新缓存
+  NewsRefreshCache(params){
+    return fetch(base.baseUrl.serviceFive + 'newArticle/updateNewsRedis',params);
+  },
+
+  //推送
+  NewsPush(params){
+    return fetch(base.baseUrl.serviceFive + 'newArticle/realTimePushNews',params);
+  },
+
   /**
    * 体检资讯
    * **/
@@ -1031,5 +1041,83 @@ export default {
     return fetch(base.baseUrl.serviceSix + 'healthmessage/findMessageById', params);
   },
 
+  /**
+   * 首页全站搜索关键词
+   * */
+  //关键词列表
+  IndexSearchKeyList(params){
+    return fetch(base.baseUrl.serviceFive + 'keyword/findKeywordList',params);
+  },
+
+  //新增词
+  IndexSearchKeyAdd(params){
+    return fetch(base.baseUrl.serviceFive + 'keyword/insertKeyword',params);
+  },
+
+  //关键词状态修改
+  IndexSearchKeyStatus(params){
+    return fetch(base.baseUrl.serviceFive + 'keyword/modifyKeyword',params);
+  },
+
+  /**
+   * 家乡资讯
+   * */
+  //家乡资讯列表查询
+  HomeNewsList(params){
+    return fetch(base.baseUrl.serviceFive + 'homeDownNews/selectListByParam',params);
+  },
+
+  //新增家乡资讯
+  HomeNewsAdd(params){
+    return fetch(base.baseUrl.serviceFive + 'homeDownNews/save',params);
+  },
+
+  //修改家乡资讯
+  HomeNewsUpdate(params){
+    return fetch(base.baseUrl.serviceFive + 'homeDownNews/update',params);
+  },
+
+  //删除家乡资讯
+  HomeNewsDelete(params){
+   return fetch(base.baseUrl.serviceFive + 'homeDownNews/delete',params);
+  },
+
+  //家乡资讯详情查询
+  HomeNewsDetail(params){
+    return fetch(base.baseUrl.serviceFive + 'homeDownNews/selectDetail',params);
+  },
+
+  //家乡资讯行政区域查询
+  HomeNewsArea(params){
+    return fetch(base.baseUrl.serviceFive + 'newArticle/selectTareaList',params);
+  },
+
+  //同步家乡资讯给玄乐
+  HomeNewsPushToXuanle(params){
+    return fetch(base.baseUrl.serviceFive + 'homeDownNews/realTimePushNews',params);
+  },
+
+  //查询上一次填写的省市信息
+  HomeNewsLastPosition(params){
+    return fetch(base.baseUrl.serviceFive + 'homeDownNews/getNewAreaInfo',params);
+  },
+
+  /**
+   * apk管理
+   * **/
+  //apk列表
+  ApkList(params){
+    return fetch(base.baseUrl.serviceFive + 'appVersion/getAppVerList',params);
+  },
+
+  //保存
+  ApkSave(params){
+    return fetch(base.baseUrl.serviceFive + 'appVersion/saveAppVer',params);
+  },
+
+  //删除
+  ApkDelete(params){
+    return fetch(base.baseUrl.serviceFive + 'appVersion/delVerInfo',params);
+  },
 }
 

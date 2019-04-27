@@ -400,7 +400,8 @@
           type:'',
           showHidden:'',
           pageNum:1,
-          pageSize:10
+          pageSize:10,
+          owenrId:''
         },
         listData:[],
         columns:[
@@ -754,7 +755,8 @@
           content:'',
           type:'',
           backPic:'',
-          videoPath:''
+          videoPath:'',
+          owenrId:''
         },
         //详情数据
         knowDetailValue:false,
@@ -796,7 +798,8 @@
           content:'',
           type:'',
           backPic:'',
-          videoPath:''
+          videoPath:'',
+          owenrId:''
         },
         ruleValidate:{
           // name:[
@@ -831,7 +834,18 @@
       }
     },
     mounted () {
+      if (sessionStorage.getItem('userId') != null) {
+        this.$store.state.user_id = sessionStorage.getItem('userId');
+      }
+      this.listParams.owenrId = this.userId;
+      this.knowFormData.owenrId = this.userId;
+      this.knowReviseFormData.owenrId = this.userId;
       this.getKnowList();
+    },
+    computed:{
+      userId:function () {
+        return this.$store.state.user_id;
+      }
     },
     methods:{
       //查询列表时根据分类获取知识类别

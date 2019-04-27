@@ -94,6 +94,7 @@
           })
       },
       handleSuccess:function (res,file,fileList) {
+        //console.log(res);
         if (res.code === 200) {
           file.url = res.result;
           this.$emit('success-callback',file,this.title,fileList);

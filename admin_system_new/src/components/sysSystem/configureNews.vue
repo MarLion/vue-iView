@@ -3,6 +3,7 @@
     <div class="community-fun">
       <div class="community-ope">
         <Button type="default" icon="md-add" @click="addNews">添加新闻</Button>
+        <Button type="default" icon="ios-refresh" @click="refreshCache" :loading="cacheLoading">更新缓存</Button>
       </div>
       <div class="community-search">
         <span class="ml15">新闻标题：</span>
@@ -41,6 +42,9 @@
       @on-close="clearNewsData"
     >
       <Form :model="newsFormData" ref="newsForm" :rules="ruleValidate" style="width: 100%;margin-top: 20px;">
+        <FormItem label="新闻来源：" prop="newsSource" :label-width="100">
+          <Input type="text" :maxlength="80" v-model="newsFormData.newsSource" style="width: 400px;"></Input>
+        </FormItem>
         <FormItem label="一级分类：" :label-width="100" prop="newOneType">
           <Select v-model="newsFormData.newOneType" @on-change="addGetSecond" style="width: 400px;">
             <Option v-for="(item,index) in firstClass" :key="index" :value="item.value">{{item.label}}</Option>
@@ -127,6 +131,9 @@
       @on-close="clearNewsReviseData"
     >
       <Form :model="newsReviseData" ref="newsRevise" :rules="ruleValidate" style="width: 100%;margin-top: 20px;">
+        <FormItem label="新闻来源：" prop="newsSource" :label-width="100">
+          <Input type="text" :maxlength="80" v-model="newsReviseData.newsSource" style="width: 400px;"></Input>
+        </FormItem>
         <FormItem label="一级分类：" :label-width="100" prop="newOneType">
           <Select v-model="newsReviseData.newOneType" @on-change="addReviseSecond" style="width: 400px;">
             <Option v-for="(item,index) in firstClass" :key="index" :value="item.value">{{item.label}}</Option>
@@ -159,12 +166,11 @@
           <revise-upload-view ref="contentCoverRe" :upload-url="uploadUrl" title="正文背景图" :length="1" :width="100" con-width="100%" :default-list="defaultContentCover" :list-value="isContentCoverRe" v-on:success-callback="contentCoverReSuccess" v-on:remove-callback="contentCoverReRemove"></revise-upload-view>
         </FormItem>
         <FormItem label="视频类型：" :label-width="100">
-          <Select v-model="newsReviseData.videoType" style="width: 400px;" @on-change="reVideoType">
+          <Select v-model="newsReviseData.videoType" style="width: 400px;" @on-change="reVideoType(newsReviseData.videoType)">
             <Option v-for="(item,index) in videoTypeList" :key="index" :value="item.value">{{item.label}}</Option>
           </Select>
         </FormItem>
         <FormItem v-show="newsReviseData.videoType === '0'">
-          <!--封装的视频上传组件 可以将以前的视频上传替换成组件-->
           <revise-video-view  ref="newsVideoRe" :upload-url="uploadUrl" title="上传视频" :length="1" :width="100" con-width="100%" :default-list="defaultVideo" :watch-value="isVideoShow" v-on:success-callback="videoReSuccess" v-on:remove-callback="videoReRemove"></revise-video-view>
         </FormItem>
         <FormItem  label="视频链接：" :label-width="100" v-show="newsReviseData.videoType === '1'">
@@ -207,6 +213,13 @@
 <script>
   import axios from "../../axios/axios";
   import * as base from '../../axios/base';
+  const newsSouce = (rule,value,callback) => {
+    if (value === '') {
+      callback(new Error('请填写新闻来源'))
+    } else {
+      callback();
+    }
+  };
   const oneValidate = (rule,value,callback) => {
     if (value === '') {
       callback(new Error('请选择一级分类'))
@@ -249,6 +262,7 @@
         detailValue:false,
         reviseValue:false,
         newsReviseLoading:false,
+        cacheLoading:false,
         styles: {
           height: 'calc(100% - 55px)',
           overflow: 'auto',
@@ -323,6 +337,11 @@
           {
             title:'关键字',
             key:'newKeyWord',
+            align:'center'
+          },
+          {
+            title:'新闻来源',
+            key:'newsSource',
             align:'center'
           },
           {
@@ -417,6 +436,7 @@
                           this.isVideoShow = true;
                           let message = res.data[0];
                           this.newsReviseData.id = message.id;
+                          this.newsReviseData.newsSource = message.newsSource;
                           this.newsReviseData.newOneType = parseInt(message.newOneType);
                           this.addReviseSecond();
                           this.newsReviseData.newTwoType = parseInt(message.newTwoType);
@@ -513,9 +533,30 @@
                 style:{
                   marginRight:'5px'
                 },
+                domProps:{
+                  id: 'ref' + params.row.id
+                },
                 on:{
                   click:() => {
-
+                    let id = 'ref' + params.row.id;
+                    let isDisabled = true;
+                    document.getElementById(id).setAttribute('disabled',isDisabled);
+                    axios.NewsPush({id:params.row.id})
+                      .then(res => {
+                        //console.log(res);
+                        this.newsTip = true;
+                        this.$refs.newsTip.innerHTML = res.data;
+                        this.getNewsList();
+                        isDisabled = false;
+                        document.getElementById(id).setAttribute('disabled',isDisabled);
+                      })
+                      .catch(error => {
+                        console.log(error);
+                        this.newsTip = true;
+                        this.$refs.newsTip.innerHTML = '推送失败！';
+                        isDisabled = false;
+                        document.getElementById(id).setAttribute('disabled',isDisabled);
+                      })
                   }
                 }
               },'推送');
@@ -530,6 +571,7 @@
         ],
         addSecond:[],
         newsFormData:{
+          newsSource:'',//来源
           newTitle:'', //新闻标题
           newOneType:'', //新闻一级类型
           newTwoType:'', //新闻二级类型
@@ -566,6 +608,7 @@
         defaultVideo:[],
         newsReviseData:{
           id:'',
+          newsSource:'',//来源
           newTitle:'', //新闻标题
           newOneType:'', //新闻一级类型
           newTwoType:'', //新闻二级类型
@@ -583,6 +626,9 @@
           owenrId:'',
         },
         ruleValidate:{
+          // newsSource:[
+          //   {validator:newsSouce}
+          // ],
           newOneType:[
             {validator:oneValidate}
           ],
@@ -654,6 +700,22 @@
       },
       addNews:function () {
         this.newsValue = true;
+      },
+      refreshCache:function () {
+        this.cacheLoading = true;
+        axios.NewsRefreshCache()
+          .then(res => {
+            //console.log(res);
+            this.cacheLoading = false;
+            this.newsTip = true;
+            this.$refs.newsTip.innerHTML = res.data;
+        })
+          .catch(error => {
+            console.log(error);
+            this.newsTip = true;
+            this.$refs.newsTip.innerHTML = '更新缓存失败！';
+            this.cacheLoading = false;
+          })
       },
       checkNews:function () {
         this.listParams.pageNum = 1;

@@ -380,6 +380,31 @@ route.push({
       requireAuth:true
     },
   },
+  {
+    path:'/configureHomeNews',
+    name:'configureHomeNews',
+    component: resolve => require(['../components/homeNews/configureHomeNews.vue'], resolve),
+    meta:{
+      requireAuth:true
+    },
+  },
+  {
+    path:'/configureIndexKey',
+    name:'configureIndexKey',
+    component: resolve => require(['../components/indexSearch/configureIndexKey.vue'], resolve),
+    meta:{
+      requireAuth:true
+    },
+  },
+  /*apk版本管理*/
+  {
+    path:'/configureVersion',
+    name:'configureVersion',
+    component: resolve => require(['../components/versionControl/configureVersion.vue'], resolve),
+    meta:{
+      requireAuth:true
+    },
+  },
 );
 export default new Router({
   routes: route

@@ -14,5 +14,5 @@ export const baseUrl = {
   // serviceThree:'http://112.74.187.103/business-user-service/',
   // serviceFour:'http://112.74.187.103/system-employee-service/',
   // serviceFive:'http://112.74.187.103/business-central-service/',
-  // serviceSix:'http://yys.zhongwei-info.com:6204'
+  // serviceSix:'http://yys.zhongwei-info.com/business-health-service/'
 };

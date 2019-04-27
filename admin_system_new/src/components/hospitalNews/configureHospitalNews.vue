@@ -7,8 +7,8 @@
       <div class="community-search">
         <span class="ml15">类型名称：</span>
         <span><Input class="checkWid" v-model="listParams.typeName"/></span>
-        <span class="ml15">医院名称：</span>
-        <span><Input class="checkWid" v-model="listParams.hospitalName"/></span>
+        <!--<span class="ml15">医院名称：</span>-->
+        <!--<span><Input class="checkWid" v-model="listParams.hospitalName"/></span>-->
         <span class="ml10"><Button icon="ios-search" @click="checkHospNews">查询</Button></span>
       </div>
     </div>
@@ -26,13 +26,13 @@
       @on-close="clearHospNewsData"
     >
       <Form :model="hospNewsData" ref="hospNewsData" :rules="ruleValidate"  class="mt20">
-        <FormItem :label-width="100" label="选择医院：" prop="hospitalId">
-          <Select v-model="hospNewsData.hospitalId" style="width: 400px;" @on-change="getNewsType">
-            <Option v-for="item in hospitalList" :key="item.id" :value="item.id">
-              {{item.hospitalName}}
-            </Option>
-          </Select>
-        </FormItem>
+        <!--<FormItem :label-width="100" label="选择医院：" prop="hospitalId">-->
+          <!--<Select v-model="hospNewsData.hospitalId" style="width: 400px;" @on-change="getNewsType">-->
+            <!--<Option v-for="item in hospitalList" :key="item.id" :value="item.id">-->
+              <!--{{item.hospitalName}}-->
+            <!--</Option>-->
+          <!--</Select>-->
+        <!--</FormItem>-->
         <FormItem :label-width="100" label="资讯类型：" prop="type">
           <Select v-model="hospNewsData.type" style="width: 400px;">
             <Option v-for="(item,index) in typeList" :key="index" :value="item.type">
@@ -66,7 +66,7 @@
       <Form :model="hospNewsReData" ref="hospNewsReData" :rules="ruleValidate"  class="mt20">
         <FormItem :label-width="100" label="资讯类型：" prop="type">
           <Select v-model="hospNewsReData.type" style="width: 400px;">
-            <Option v-for="(item,index) in typeList" :key="index" :value="item.type">
+            <Option v-for="(item,index) in reTypeList" :key="index" :value="item.type">
               {{item.typeName}}
             </Option>
           </Select>
@@ -75,10 +75,10 @@
           <Input type="text" :maxlength="80" v-model="hospNewsReData.title" style="width: 400px;"></Input>
         </FormItem>
         <FormItem>
-
+          <revise-upload-view ref="hospitalCoverRe" :upload-url="uploadUrl" title="首页展示图" :length="1" :width="100" con-width="100%" :default-list="defaultHospCover" :list-value="isHospCoverRe" v-on:success-callback="hospCoverReSuccess" v-on:remove-callback="hospCoverReRemove"></revise-upload-view>
         </FormItem>
         <FormItem label="资讯正文：" :label-width="100">
-
+          <revise-editor-view ref="hospEdRe" :upload-url="uploadUrl" :original-content="hospNewsReData.content" :watch-value="isHospContentWatch" v-on:transmit-con="getReviseHospContent"></revise-editor-view>
         </FormItem>
         <FormItem style="width: 200px!important;" :label-width="100">
           <Button type="primary" @click="hospNewsReSub" :loading="hospReLoading">确认修改</Button>
@@ -145,11 +145,12 @@
          limit:10,
          pageNum:1,
          typeName:'',
-         hospitalName:'',
+         //hospitalName:'',
          owenrId:'',
        },
        hospitalList:[],
        typeList:[],
+       reTypeList:[],
        listData:[],
        columns:[
          {
@@ -160,11 +161,6 @@
          {
            title:'资讯标题',
            key:'title',
-           align:'center'
-         },
-         {
-           title:'所属医院',
-           key:'hospitalName',
            align:'center'
          },
          {
@@ -214,8 +210,29 @@
                },
                on:{
                  click:() => {
-                  this.hospReValue = true;
+                   //console.log(JSON.stringify(params.row));
+                   this.hospReValue = true;
+                   this.isHospCoverRe = true;
+                   this.isHospContentWatch = true;
+                   this.hospNewsReData.id = params.row.id;
+                   axios.HospitalNewsCkasById()
+                    .then(res => {
+                      //console.log(res);
+                      this.reTypeList = res;
+                      this.hospNewsReData.type = params.row.type;
+                    })
+                    .catch(error => {
+                      console.log(error);
+                      this.newsTip = true;
+                      this.$refs.newsTip.innerHTML = '查询类型出错！';
+                    });
                   this.hospNewsReData.title = params.row.title;
+                  if (params.row.imgUrl && params.row.imgUrl !== '' && params.row.imgUrl !== undefined ) {
+                    this.defaultHospCover.push({url:params.row.imgUrl,status:'finished'})
+                  } else {
+                    this.defaultHospCover = [];
+                  }
+                  this.hospNewsReData.content = params.row.content;
                  }
                }
              },'修改');
@@ -256,20 +273,23 @@
          },
        ],
        hospNewsData:{
-         imgUrl:'',
+         imgstr:'',
          title:'',
          type:'',
          content:'',
-         hospitalId:'',
+         //hospitalId:'',
          owenrId:''
        },
+       defaultHospCover:[],
+       isHospCoverRe:false,
+       isHospContentWatch:false,
        hospNewsReData:{
          id:'',
-         imgUrl:'',
+         imgstr:'',
          title:'',
          type:'',
          content:'',
-         hospitalId:'',
+         //hospitalId:'',
          owenrId:''
        },
        ruleValidate:{
@@ -320,7 +340,7 @@
       },
       //获取类型
       getNewsType:function () {
-        axios.HospitalNewsCkasById({id:this.hospNewsData.hospitalId})
+        axios.HospitalNewsCkasById()
           .then(res => {
             //console.log(res);
             this.typeList = res;
@@ -354,7 +374,7 @@
       },
       addHospNews:function () {
         this.hospValue = true;
-        this.getHospital();
+        this.getNewsType();
       },
       checkHospNews:function () {
         this.listParams.pageNum = 1;
@@ -369,16 +389,16 @@
       },
       clearHospNewsData:function () {
         this.$refs.hospNewsData.resetFields();
-        this.hospNewsData.imgUrl = '';
+        this.hospNewsData.imgstr = '';
         this.hospNewsData.content = '';
         this.$refs.hospNewsCover.clearUpload();
         this.$refs.newsContent.clearData();
       },
       successHospCoverPath:function (file,title,fileList) {
-        this.hospNewsData.imgUrl = file.url;
+        this.hospNewsData.imgstr = file.url;
       },
       removeHospCoverPath:function () {
-        this.hospNewsData.imgUrl = '';
+        this.hospNewsData.imgstr = '';
       },
       getHospNewsContent:function (con) {
         this.hospNewsData.content = con;
@@ -391,7 +411,7 @@
             axios.HospitalNewsSave(this.hospNewsData)
               .then(res => {
                 this.hospLoading = false;
-                console.log(res);
+                //console.log(res);
                 if (res.code === '0') {
                   this.hospValue = false;
                   this.clearHospNewsData();
@@ -414,18 +434,54 @@
         })
       },
       clearHospNewsReData:function () {
-
+        this.isHospCoverRe = false;
+        this.isHospContentWatch = false;
+        this.defaultHospCover = [];
+        this.$refs.hospNewsReData.resetFields();
+        this.$refs.hospitalCoverRe.clearUpload();
+        this.$refs.hospEdRe.clearData();
+        this.hospNewsReData.imgstr = '';
+        this.hospNewsReData.content = '';
+        this.hospNewsReData.id = '';
+        //this.hospNewsReData.hospitalId = '';
       },
       hospNewsReSub:function () {
-
+        this.$refs.hospNewsReData.validate(valid => {
+          if (valid) {
+            this.hospReLoading = true;
+            axios.HospitalNewsSave(this.hospNewsReData)
+              .then(res => {
+                this.hospReLoading = false;
+                if (res.code === '0') {
+                  this.hospReValue = false;
+                  this.clearHospNewsReData();
+                  this.newsTip = true;
+                  this.$refs.newsTip.innerHTML = '修改成功！';
+                  this.getHospNewsList();
+                } else {
+                  this.newsTip = true;
+                  this.$refs.newsTip.innerHTML = '修改失败！';
+                }
+              })
+              .catch(error => {
+                console.log(error);
+                this.newsTip = true;
+                this.$refs.newsTip.innerHTML = '修改失败！';
+                this.hospReLoading = false;
+              })
+          }
+        })
       },
-
-
-
-
-
-
-
+      hospCoverReSuccess:function (file,title,fileList) {
+        //console.log(file.url);
+        this.hospNewsReData.imgstr = file.url;
+      },
+      hospCoverReRemove:function () {
+        this.hospNewsReData.imgstr = '';
+      },
+      getReviseHospContent:function (con) {
+        this.hospNewsReData.content = con;
+      },
     }
   }
 </script>

@@ -7,8 +7,8 @@
       <div class="community-search">
         <span class="ml15">类型名称：</span>
         <span><Input class="checkWid" v-model="listParams.typeName"/></span>
-        <span class="ml15">医院名称：</span>
-        <span><Input class="checkWid" v-model="listParams.hospitalName"/></span>
+        <!--<span class="ml15">医院名称：</span>-->
+        <!--<span><Input class="checkWid" v-model="listParams.hospitalName"/></span>-->
         <span class="ml10"><Button icon="ios-search" @click="checkType">查询</Button></span>
       </div>
     </div>
@@ -26,13 +26,13 @@
       @on-visible-change="isTypeClassVisible"
     >
       <Form :model="hospClassFormData" ref="hospClassForm" :rules="ruleValidate" :label-width="80" class="mt20">
-        <FormItem label="选择医院：" prop="hospitalId">
-          <Select v-model="hospClassFormData.hospitalId">
-            <Option v-for="item in hospitalList" :key="item.id" :value="item.id">
-              {{item.hospitalName}}
-            </Option>
-          </Select>
-        </FormItem>
+        <!--<FormItem label="选择医院：" prop="hospitalId">-->
+          <!--<Select v-model="hospClassFormData.hospitalId">-->
+            <!--<Option v-for="item in hospitalList" :key="item.id" :value="item.id">-->
+              <!--{{item.hospitalName}}-->
+            <!--</Option>-->
+          <!--</Select>-->
+        <!--</FormItem>-->
         <FormItem label="类型名称：" prop="typeName">
           <Input type="text" v-model="hospClassFormData.typeName"></Input>
         </FormItem>
@@ -100,7 +100,7 @@
           pageNum:1,
           limit:10,
           typeName:'',
-          hospitalName:''
+          //hospitalName:''
         },
         listData:[],
         columns:[
@@ -112,11 +112,6 @@
           {
             title:'类型名称',
             key:'typeName',
-            align:'center'
-          },
-          {
-            title:'所属医院',
-            key:'hospitalName',
             align:'center'
           },
           {
@@ -158,7 +153,7 @@
                   click:() => {
                     this.reviseHospType = true;
                     this.hospClassReData.id = params.row.id;
-                    this.hospClassReData.hospitalId = params.row.hospitalId;
+                    //this.hospClassReData.hospitalId = params.row.hospitalId;
                     this.hospClassReData.typeName = params.row.typeName;
                   }
                 }
@@ -202,12 +197,12 @@
         ],
         hospClassFormData:{
           typeName:'',
-          hospitalId:''
+          //hospitalId:''
         },
         hospClassReData:{
           id:'',
           typeName:'',
-          hospitalId:''
+          //hospitalId:''
         },
         ruleValidate:{
           hospitalId:[
@@ -363,7 +358,7 @@
       },
       clearTypeReData:function () {
         this.hospClassReData.id = '';
-        this.hospClassReData.hospitalId = '';
+        //this.hospClassReData.hospitalId = '';
         this.$refs.hospClassReData.resetFields();
       }
     }
